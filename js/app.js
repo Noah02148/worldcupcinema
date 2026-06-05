@@ -35,6 +35,24 @@
     !f ? '' : (getLang() === 'en' ? (f.title_en || f.title_original || f.title_zh)
                                   : (f.title_zh || f.title_original || f.title_en));
 
+  /* ---------- match status / score ---------- */
+
+  // Resolve a fixture's live/final state into display bits.
+  function matchStatus(fx) {
+    const r = DATA.resultForFixture(fx);
+    const live = !!(r && r.state === 'in');
+    const done = !!(r && (r.state === 'post' || r.completed));
+    const hasScore = live || done;
+    const h = r && r.home != null && r.home !== '' ? r.home : '-';
+    const a = r && r.away != null && r.away !== '' ? r.away : '-';
+    const score = hasScore ? `${esc(h)}<span class="sc-dash">–</span>${esc(a)}` : null;
+    let label, cls;
+    if (live) { cls = 'is-live'; label = t('status_live') + (r.detail ? ' · ' + r.detail : ''); }
+    else if (done) { cls = 'is-final'; label = t('status_final'); }
+    else { cls = 'is-pre'; label = t('status_pre'); }
+    return { hasScore, live, done, score, label, cls };
+  }
+
   /* ---------- poster ---------- */
 
   // While poster_url is still empty in the sheet, show a dim placeholder.
@@ -80,16 +98,21 @@
     const groupTxt = `${t('group_label')} ${esc(fx.group)}`;
     const timeTxt = I18N.formatTime(fx.instant);
     const city = esc((fx.venue_city || '').trim());
+    const st = matchStatus(fx);
     meta.innerHTML =
       `<span class="m-group">${groupTxt}</span>` +
       `<span class="m-dot">·</span><span class="m-time">${timeTxt}</span>` +
-      (city ? `<span class="m-dot">·</span><span class="m-city">${city}</span>` : '');
+      (city ? `<span class="m-dot">·</span><span class="m-city">${city}</span>` : '') +
+      `<span class="m-status ${st.cls}">${esc(st.label)}</span>`;
     card.appendChild(meta);
 
     const body = el('div', 'match-body');
     body.appendChild(teamSide(home, fx.home_id, md));
-    const vs = el('div', 'vs', `<span>${esc(t('vs'))}</span>`);
-    body.appendChild(vs);
+    const center = el('div', 'vs' + (st.hasScore ? ' has-score' : ''));
+    center.innerHTML = st.hasScore
+      ? `<span class="score">${st.score}</span>`
+      : `<span>${esc(t('vs'))}</span>`;
+    body.appendChild(center);
     body.appendChild(teamSide(away, fx.away_id, md));
     card.appendChild(body);
 
@@ -240,12 +263,31 @@
       ? (fx.away_id || '').trim() : (fx.home_id || '').trim();
     const opp = DATA.model.countriesById[oppId];
 
+    // Result chip, oriented to this country (self score first).
+    const st = matchStatus(fx);
+    let resultHTML;
+    if (st.hasScore) {
+      const r = DATA.resultForFixture(fx);
+      const selfHome = (fx.home_id || '').trim() === selfId;
+      const selfScore = selfHome ? r.home : r.away;
+      const oppScore = selfHome ? r.away : r.home;
+      let outcome = 'is-live';
+      if (st.done) {
+        const a = Number(selfScore), b = Number(oppScore);
+        outcome = a > b ? 'is-win' : a < b ? 'is-loss' : 'is-draw';
+      }
+      resultHTML = `<span class="fr-result ${outcome}">${esc(selfScore)} - ${esc(oppScore)}</span>`;
+    } else {
+      resultHTML = `<span class="fr-result is-pre">${esc(t('status_pre'))}</span>`;
+    }
+
     const row = el('a', 'fixture-row');
     row.href = `#/country/${encodeURIComponent(oppId)}`;
     row.innerHTML =
       `<span class="fr-md">${esc(t('matchday_label', { n: fx.matchdayNum }))}</span>` +
       `<span class="fr-opp"><span class="flag">${esc((opp && opp.flag) || '')}</span>` +
         `<span>${esc(countryName(opp) || oppId)}</span></span>` +
+      resultHTML +
       `<span class="fr-when">${esc(I18N.formatDateFull(fx.instant))} · ${esc(I18N.formatTime(fx.instant))}</span>` +
       `<span class="fr-city">${esc((fx.venue_city || '').trim())}</span>`;
     return row;
@@ -336,6 +378,18 @@
     window.addEventListener('hashchange', render);
   }
 
+  // Poll ESPN for live scores; re-render only when something actually changed
+  // (so the page doesn't jump while you're reading a static schedule).
+  function startResultPolling() {
+    setInterval(async () => {
+      if (document.hidden) return;
+      try {
+        const changed = await DATA.fetchResults();
+        if (changed) render();
+      } catch (e) { /* keep last-known scores */ }
+    }, 60000);
+  }
+
   async function init() {
     restorePrefs();
     applyStaticI18n();
@@ -343,6 +397,7 @@
     try {
       await DATA.load();
       render();
+      startResultPolling();
     } catch (err) {
       console.error(err);
       appEl.innerHTML = '';

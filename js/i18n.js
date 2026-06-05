@@ -32,6 +32,9 @@
     tz_note:         { zh: '北京时间',     en: 'ET' },
     no_film:         { zh: '电影待定',     en: 'Film TBD' },
     not_found:       { zh: '未找到该国家', en: 'Country not found' },
+    status_pre:      { zh: '未开始',       en: 'Upcoming' },
+    status_live:     { zh: '进行中',       en: 'Live' },
+    status_final:    { zh: '完场',         en: 'Full-time' },
   };
 
   const TZ = { zh: 'Asia/Shanghai', en: 'America/New_York' };

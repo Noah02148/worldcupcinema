@@ -8,6 +8,12 @@
   const csvUrl = (tab) =>
     `https://docs.google.com/spreadsheets/d/${FILE_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
 
+  // Live scores: ESPN's unofficial scoreboard for the FIFA World Cup. No key,
+  // returns `access-control-allow-origin: *`, and its team abbreviations match
+  // our country_ids exactly. One ranged request covers the whole group stage.
+  const RESULTS_URL =
+    'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260627&limit=200';
+
   // Parsed + shaped model, populated by load().
   const model = {
     countriesById: {},   // country_id -> country row
@@ -16,8 +22,12 @@
     fixtures: [],        // [{...row, instant}] sorted by kickoff
     fixturesByCountry: {}, // country_id -> [fixtures]
     groups: [],          // sorted group letters present in data
+    resultsByPair: {},   // "AAA|BBB" (sorted) -> { state, scores:{id:n}, detail }
     loaded: false,
   };
+
+  // Order-independent key for the two teams in a match.
+  const pairKey = (a, b) => [String(a).trim(), String(b).trim()].sort().join('|');
 
   function fetchCsv(tab) {
     return new Promise((resolve, reject) => {
@@ -45,7 +55,59 @@
     window.I18N.mergeStrings(strings);
 
     model.loaded = true;
+    // Scores are best-effort: a failure here must not break the schedule.
+    await fetchResults().catch((e) => console.warn('results fetch failed', e));
     return model;
+  }
+
+  /** Fetch ESPN scoreboard and (re)build resultsByPair. Returns true if changed. */
+  async function fetchResults() {
+    const res = await fetch(RESULTS_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const next = {};
+    (data.events || []).forEach((e) => {
+      const comp = (e.competitions && e.competitions[0]) || {};
+      const cs = comp.competitors || [];
+      if (cs.length < 2) return;
+      const type = (e.status && e.status.type) || {};
+      const scores = {};
+      cs.forEach((c) => {
+        const ab = c.team && c.team.abbreviation;
+        if (ab) scores[ab.trim()] = c.score;
+      });
+      const ab0 = cs[0].team && cs[0].team.abbreviation;
+      const ab1 = cs[1].team && cs[1].team.abbreviation;
+      if (!ab0 || !ab1) return;
+      next[pairKey(ab0, ab1)] = {
+        state: type.state || 'pre',        // 'pre' | 'in' | 'post'
+        completed: !!type.completed,
+        detail: type.shortDetail || type.detail || '',
+        scores,
+      };
+    });
+    const changed = JSON.stringify(next) !== JSON.stringify(model.resultsByPair);
+    model.resultsByPair = next;
+    return changed;
+  }
+
+  /**
+   * Result for a fixture, oriented to its own home/away ids. Returns null when
+   * the match isn't in the results feed yet.
+   *   { state, completed, detail, home, away }  (home/away are score strings)
+   */
+  function resultForFixture(fx) {
+    const h = (fx.home_id || '').trim();
+    const a = (fx.away_id || '').trim();
+    const r = model.resultsByPair[pairKey(h, a)];
+    if (!r) return null;
+    return {
+      state: r.state,
+      completed: r.completed,
+      detail: r.detail,
+      home: r.scores[h],
+      away: r.scores[a],
+    };
   }
 
   function shapeCountries(rows) {
@@ -113,5 +175,5 @@
       .map((slot) => bySlot[slot]);
   }
 
-  window.DATA = { model, load, filmForMatch, filmsList };
+  window.DATA = { model, load, filmForMatch, filmsList, fetchResults, resultForFixture };
 })();
