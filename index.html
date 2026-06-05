@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorldCupCinema — game day &amp; movie night!</title>
+  <link rel="preconnect" href="https://docs.google.com" />
+  <link rel="preconnect" href="https://image.tmdb.org" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="#/" class="brand">
+        <span class="brand-mark">▶</span>
+        <span class="brand-text">
+          <span class="brand-name">WorldCupCinema</span>
+          <span class="brand-slogan">game day &amp; movie night!</span>
+        </span>
+      </a>
+
+      <nav class="tabs" aria-label="stage">
+        <a href="#/" class="tab" data-tab="group" data-i18n="tab_group_stage">小组赛</a>
+        <a href="#/knockout" class="tab" data-tab="knockout" data-i18n="tab_knockout">淘汰赛</a>
+      </nav>
+
+      <div class="lang-switch" role="group" aria-label="language">
+        <button class="lang-btn" data-lang="zh">中</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app" class="app">
+    <div class="loading" data-i18n="loading">加载中…</div>
+  </main>
+
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="./js/i18n.js"></script>
+  <script src="./js/dev-posters.js"></script><!-- TEMP: local poster previews; remove once Sheet poster_url is filled -->
+  <script src="./js/data.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
