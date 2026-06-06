@@ -97,7 +97,7 @@
     const meta = el('div', 'match-meta');
     const groupTxt = `${t('group_label')} ${esc(fx.group)}`;
     const timeTxt = I18N.formatTime(fx.instant);
-    const city = esc((fx.venue_city || '').trim());
+    const city = esc(I18N.cityName(fx.venue_city));
     const st = matchStatus(fx);
     meta.innerHTML =
       `<span class="m-group">${groupTxt}</span>` +
@@ -289,7 +289,7 @@
         `<span>${esc(countryName(opp) || oppId)}</span></span>` +
       resultHTML +
       `<span class="fr-when">${esc(I18N.formatDateFull(fx.instant))} · ${esc(I18N.formatTime(fx.instant))}</span>` +
-      `<span class="fr-city">${esc((fx.venue_city || '').trim())}</span>`;
+      `<span class="fr-city">${esc(I18N.cityName(fx.venue_city))}</span>`;
     return row;
   }
 

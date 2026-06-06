@@ -40,6 +40,33 @@
   const TZ = { zh: 'Asia/Shanghai', en: 'America/New_York' };
   const LOCALE = { zh: 'zh-CN', en: 'en-US' };
 
+  // 2026 host cities, English (as stored in the sheet) -> 中文.
+  const CITY_ZH = {
+    'Atlanta': '亚特兰大',
+    'Boston': '波士顿',
+    'Dallas': '达拉斯',
+    'Guadalajara': '瓜达拉哈拉',
+    'Houston': '休斯顿',
+    'Kansas City': '堪萨斯城',
+    'Los Angeles': '洛杉矶',
+    'Mexico City': '墨西哥城',
+    'Miami': '迈阿密',
+    'Monterrey': '蒙特雷',
+    'New Jersey': '新泽西',
+    'Philadelphia': '费城',
+    'San Francisco': '旧金山',
+    'Seattle': '西雅图',
+    'Toronto': '多伦多',
+    'Vancouver': '温哥华',
+  };
+
+  /** Venue city in the current language; falls back to the English name. */
+  function cityName(en) {
+    const name = (en || '').trim();
+    if (state.lang === 'zh' && CITY_ZH[name]) return CITY_ZH[name];
+    return name;
+  }
+
   const state = { lang: 'zh', strings: DEFAULT_STRINGS };
 
   function setLang(lang) {
@@ -116,7 +143,7 @@
   }
 
   window.I18N = {
-    setLang, getLang, mergeStrings, t,
+    setLang, getLang, mergeStrings, t, cityName,
     fixtureInstant, formatTime, formatDateFull, dateKey, tz, locale,
   };
 })();
