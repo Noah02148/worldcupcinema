@@ -39,6 +39,11 @@
     completed_heading: { zh: '已完赛',     en: 'Completed' },
     tbd_title:       { zh: '待添加',       en: 'To be added' },
     tbd_sub:         { zh: '欢迎投稿',     en: 'Submissions welcome' },
+    contact:         { zh: '影片投稿',     en: 'Contact' },
+    contact_body: {
+      zh: '欢迎联系我,推荐「待添加」参赛国家的代表电影;或为已有电影的参赛国家补充更多片单。',
+      en: 'Reach out to recommend a film for a country that doesn’t have one yet — or suggest more films for countries already on the wall.',
+    },
   };
 
   const TZ = { zh: 'Asia/Shanghai', en: 'America/New_York' };

@@ -432,6 +432,14 @@
     document.querySelectorAll('.lang-btn').forEach((b) =>
       b.addEventListener('click', () => switchLang(b.dataset.lang)));
     window.addEventListener('hashchange', render);
+
+    // Contact: smooth-scroll to the footer without touching the hash router.
+    const contact = document.querySelector('.contact-nav');
+    if (contact) contact.addEventListener('click', (e) => {
+      e.preventDefault();
+      const sec = document.getElementById('contact');
+      if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   // Poll ESPN for live scores; re-render only when something actually changed

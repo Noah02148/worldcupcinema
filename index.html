@@ -24,6 +24,15 @@
         <a href="#/knockout" class="tab" data-tab="knockout" data-i18n="tab_knockout">淘汰赛</a>
       </nav>
 
+      <a href="#contact" class="contact-nav" aria-label="contact">
+        <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M3 7l9 6 9-6" />
+        </svg>
+        <span data-i18n="contact">影片投稿</span>
+      </a>
+
       <div class="lang-switch" role="group" aria-label="language">
         <button class="lang-btn" data-lang="zh">中</button>
         <button class="lang-btn" data-lang="en">EN</button>
@@ -34,6 +43,12 @@
   <main id="app" class="app">
     <div class="loading" data-i18n="loading">加载中…</div>
   </main>
+
+  <footer id="contact" class="contact">
+    <h2 class="contact-head" data-i18n="contact">影片投稿</h2>
+    <p class="contact-body" data-i18n="contact_body"></p>
+    <a class="contact-email" href="mailto:fangzhouhe68@gmail.com">fangzhouhe68@gmail.com</a>
+  </footer>
 
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
