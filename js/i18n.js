@@ -35,6 +35,10 @@
     status_pre:      { zh: '未开始',       en: 'Upcoming' },
     status_live:     { zh: '进行中',       en: 'Live' },
     status_final:    { zh: '完场',         en: 'Full-time' },
+    today:           { zh: '今日',         en: 'Today' },
+    completed_heading: { zh: '已完赛',     en: 'Completed' },
+    tbd_title:       { zh: '待添加',       en: 'To be added' },
+    tbd_sub:         { zh: '欢迎投稿',     en: 'Submissions welcome' },
   };
 
   const TZ = { zh: 'Asia/Shanghai', en: 'America/New_York' };

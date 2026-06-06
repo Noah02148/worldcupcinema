@@ -55,33 +55,60 @@
 
   /* ---------- poster ---------- */
 
-  // While poster_url is still empty in the sheet, show a dim placeholder.
-  // We deliberately surface the (dim) title there so the seed phase is workable;
-  // for real posters the wall stays title-free (revealed on hover).
+  // The fill script writes the literal "待定" into url cells it couldn't resolve,
+  // so treat those (and TBD titles) as "not set" rather than real values.
+  const SKIP_TITLES = new Set(['', '待定', 'tbd', 'tbd.']);
+  const cleanUrl = (s) => {
+    const u = (s || '').trim();
+    return /^https?:\/\//i.test(u) ? u : '';
+  };
+  const posterUrlOf = (f) => (f ? cleanUrl(f.poster_url) : '');
+  function isTbdFilm(f) {
+    if (!f) return true;
+    return [f.title_zh, f.title_en, f.title_original]
+      .every((s) => SKIP_TITLES.has((s || '').trim().toLowerCase()));
+  }
+
+  const TBD_ICON =
+    '<svg class="tbd-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">' +
+    '<rect x="10" y="5" width="28" height="38" rx="4" stroke="currentColor" stroke-width="2.2"/>' +
+    '<line x1="24" y1="17" x2="24" y2="31" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' +
+    '<line x1="17" y1="24" x2="31" y2="24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' +
+    '</svg>';
+
   function posterEl(film) {
     const slot = el('div', 'poster');
-    const url = film && (film.poster_url || '').trim();
+    const url = posterUrlOf(film);
+
     if (url) {
       const img = el('img', 'poster-img');
       img.loading = 'lazy';
       img.src = url;
       img.alt = filmTitle(film);
       slot.appendChild(img);
+      addPosterHover(slot, film); // wall hides title; hover reveals
+    } else if (isTbdFilm(film)) {
+      // unified placeholder for a not-yet-chosen film
+      slot.classList.add('poster--empty', 'poster--tbd');
+      slot.innerHTML =
+        `<div class="tbd">${TBD_ICON}` +
+        `<div class="tbd-title">${esc(t('tbd_title'))}</div>` +
+        `<div class="tbd-sub">${esc(t('tbd_sub'))}</div></div>`;
     } else {
+      // film is known but its poster image isn't filled in yet
       slot.classList.add('poster--empty');
-      const label = film ? filmTitle(film) : t('no_film');
-      slot.appendChild(el('div', 'poster-fallback', esc(label)));
-    }
-
-    // Hover title overlay (per spec: wall hides titles, hover reveals).
-    if (film) {
-      const cap = el('div', 'poster-hover');
-      const yr = (film.year || '').trim();
-      cap.innerHTML = `<span class="ph-title">${esc(filmTitle(film))}</span>` +
-        (yr ? `<span class="ph-year">${esc(yr)}</span>` : '');
-      slot.appendChild(cap);
+      slot.appendChild(el('div', 'poster-fallback', esc(filmTitle(film))));
+      addPosterHover(slot, film);
     }
     return slot;
+  }
+
+  function addPosterHover(slot, film) {
+    const cap = el('div', 'poster-hover');
+    const yr = (film.year || '').trim();
+    cap.innerHTML = `<span class="ph-title">${esc(filmTitle(film))}</span>` +
+      (yr ? `<span class="ph-year">${esc(yr)}</span>` : '');
+    slot.appendChild(cap);
   }
 
   /* ---------- match card ---------- */
@@ -102,6 +129,7 @@
     meta.innerHTML =
       `<span class="m-group">${groupTxt}</span>` +
       `<span class="m-dot">·</span><span class="m-time">${timeTxt}</span>` +
+      `<span class="m-tz">${esc(t('tz_note'))}</span>` +
       (city ? `<span class="m-dot">·</span><span class="m-city">${city}</span>` : '') +
       `<span class="m-status ${st.cls}">${esc(st.label)}</span>`;
     card.appendChild(meta);
@@ -166,16 +194,29 @@
   }
 
   function renderByDate(container) {
-    const buckets = new Map(); // dateKey -> { instant, fixtures[] }
+    // "Today" in the current language's timezone, so it tracks the same clock
+    // the times are shown in (zh -> Beijing, en -> ET). `?today=YYYY-MM-DD`
+    // overrides it for previewing the live ordering before the tournament.
+    const override = new URLSearchParams(location.search).get('today');
+    const todayKey = /^\d{4}-\d{2}-\d{2}$/.test(override || '')
+      ? override : I18N.dateKey(new Date());
+
+    const buckets = new Map(); // dateKey -> { key, instant, fixtures[] }
     DATA.model.fixtures.forEach((fx) => {
       const key = I18N.dateKey(fx.instant);
-      if (!buckets.has(key)) buckets.set(key, { instant: fx.instant, fixtures: [] });
+      if (!buckets.has(key)) buckets.set(key, { key, instant: fx.instant, fixtures: [] });
       buckets.get(key).fixtures.push(fx);
     });
 
-    [...buckets.entries()].sort((a, b) => a[0].localeCompare(b[0])).forEach(([, b]) => {
-      const section = el('section', 'day-section');
-      section.appendChild(el('h2', 'section-head', esc(I18N.formatDateFull(b.instant))));
+    const all = [...buckets.values()].sort((a, b) => a.key.localeCompare(b.key));
+    const todayBuckets = all.filter((b) => b.key === todayKey);
+    const future = all.filter((b) => b.key > todayKey);          // ascending: next up first
+    const past = all.filter((b) => b.key < todayKey).reverse();   // most recent completed first
+
+    const renderDay = (b, isToday) => {
+      const section = el('section', 'day-section' + (isToday ? ' is-today' : ''));
+      const label = (isToday ? t('today') + ' · ' : '') + I18N.formatDateFull(b.instant);
+      section.appendChild(el('h2', 'section-head', esc(label)));
       const grid = el('div', 'card-grid');
       b.fixtures
         .slice()
@@ -183,7 +224,15 @@
         .forEach((fx) => grid.appendChild(matchCard(fx)));
       section.appendChild(grid);
       container.appendChild(section);
-    });
+    };
+
+    // Upcoming first (today pinned at the very top), completed below a divider.
+    todayBuckets.forEach((b) => renderDay(b, true));
+    future.forEach((b) => renderDay(b, false));
+    if (past.length) {
+      container.appendChild(el('h2', 'completed-head', esc(t('completed_heading'))));
+      past.forEach((b) => renderDay(b, false));
+    }
   }
 
   function renderByGroup(container) {
@@ -288,7 +337,8 @@
       `<span class="fr-opp"><span class="flag">${esc((opp && opp.flag) || '')}</span>` +
         `<span>${esc(countryName(opp) || oppId)}</span></span>` +
       resultHTML +
-      `<span class="fr-when">${esc(I18N.formatDateFull(fx.instant))} · ${esc(I18N.formatTime(fx.instant))}</span>` +
+      `<span class="fr-when">${esc(I18N.formatDateFull(fx.instant))} · ${esc(I18N.formatTime(fx.instant))}` +
+        `<span class="fr-tz">${esc(t('tz_note'))}</span></span>` +
       `<span class="fr-city">${esc(I18N.cityName(fx.venue_city))}</span>`;
     return row;
   }
@@ -298,6 +348,15 @@
     card.appendChild(posterEl(f));
 
     const info = el('div', 'film-info');
+
+    if (isTbdFilm(f)) {
+      info.innerHTML =
+        `<div class="film-title">${esc(t('tbd_title'))}</div>` +
+        `<div class="film-dir">${esc(t('tbd_sub'))}</div>`;
+      card.appendChild(info);
+      return card;
+    }
+
     const title = esc(filmTitle(f));
     const orig = (f.title_original || '').trim();
     const yr = (f.year || '').trim();
@@ -308,7 +367,7 @@
       (orig && orig !== filmTitle(f) ? `<div class="film-orig">${esc(orig)}</div>` : '') +
       (dir ? `<div class="film-dir">${esc(t('director_label'))}: ${esc(dir)}</div>` : '');
 
-    const lb = (f.letterboxd_url || '').trim();
+    const lb = cleanUrl(f.letterboxd_url);
     if (lb) {
       const a = el('a', 'lb-link', esc(t('letterboxd')) + ' →');
       a.href = lb;

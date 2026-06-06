@@ -125,6 +125,29 @@ a { color: inherit; text-decoration: none; }
   border-bottom: 1px solid var(--border);
 }
 
+/* today's matches: pinned at the top with a neon pill header */
+.day-section.is-today .section-head {
+  display: inline-block;
+  color: #0c0c0c;
+  background: var(--green);
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 16px;
+  margin-top: 4px;
+}
+
+/* divider above completed days */
+.completed-head {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 44px 0 6px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
 /* ---------- view toggle ---------- */
 
 .view-toggle {
@@ -174,6 +197,7 @@ a { color: inherit; text-decoration: none; }
 }
 .m-dot { color: var(--faint); }
 .m-time { color: var(--text); font-variant-numeric: tabular-nums; }
+.m-tz { color: var(--faint); font-size: 10px; margin-left: 3px; }
 .m-group { color: var(--green); font-weight: 600; }
 
 /* status chip, pushed to the right of the meta line */
@@ -227,11 +251,24 @@ a { color: inherit; text-decoration: none; }
   margin-top: 12px;
   display: flex;
   align-items: center;
-  gap: 9px;
   justify-content: center;
+  gap: 9px;
+  /* reserve 2 lines so wrapping long names (e.g. Bosnia and Herzegovina)
+     keep every label the same height and stay aligned across both sides + cards */
+  min-height: 44px;
 }
-.team-label .flag { font-size: 26px; line-height: 1; }
-.team-label .cname { color: var(--text); font-size: 17px; font-weight: 700; }
+.team-label .flag { font-size: 26px; line-height: 1; flex: none; }
+.team-label .cname {
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .team-side:hover .cname { color: var(--green); }
 
 /* ---------- poster (2:3) ---------- */
@@ -264,6 +301,34 @@ a { color: inherit; text-decoration: none; }
   text-align: center;
   padding: 10px;
   line-height: 1.4;
+}
+
+/* unified "to be added / submissions welcome" placeholder */
+.poster--tbd { background: #141414; }
+.tbd {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 14px;
+  text-align: center;
+}
+.tbd-icon {
+  width: 34px;
+  height: 34px;
+  color: var(--green);
+  opacity: 0.6;
+}
+.tbd-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+.tbd-sub {
+  font-size: 11px;
+  color: var(--faint);
 }
 
 .poster-hover {
@@ -352,6 +417,7 @@ a { color: inherit; text-decoration: none; }
 .fr-opp .flag { font-size: 17px; }
 .fixture-row:hover .fr-opp { color: var(--green); }
 .fr-when { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.fr-tz { color: var(--faint); font-size: 10px; margin-left: 4px; }
 .fr-city { color: var(--faint); font-size: 13px; }
 
 /* result chip on the country page (self score first) */
