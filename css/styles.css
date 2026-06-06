@@ -303,32 +303,47 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.4;
 }
 
-/* unified "to be added / submissions welcome" placeholder */
-.poster--tbd { background: #141414; }
+/* unified "to be added / submissions welcome" placeholder —
+   designed to read as a full, intentional poster (not an empty slot) */
+.poster--tbd {
+  background:
+    radial-gradient(130% 90% at 50% 30%, rgba(198, 255, 0, 0.15), rgba(198, 255, 0, 0) 58%),
+    linear-gradient(165deg, #20201c 0%, #161616 52%, #0e0e0e 100%);
+}
 .tbd {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 14px;
+  gap: 13px;
+  padding: 20px;
   text-align: center;
 }
-.tbd-icon {
-  width: 34px;
-  height: 34px;
-  color: var(--green);
-  opacity: 0.6;
+.tbd-moon {
+  width: 58%;
+  max-width: 124px;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  /* warm golden tint (toward the colorized restoration) + neon glow */
+  filter: sepia(0.55) saturate(1.7) brightness(1.06) contrast(1.05)
+          drop-shadow(0 0 12px rgba(198, 255, 0, 0.3));
 }
 .tbd-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: 0.5px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 3px;
+  padding-left: 3px;          /* recenter the tracked text */
 }
 .tbd-sub {
   font-size: 11px;
-  color: var(--faint);
+  font-weight: 600;
+  color: var(--green);
+  opacity: 0.78;
+  letter-spacing: 1px;
 }
 
 .poster-hover {

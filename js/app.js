@@ -69,12 +69,9 @@
       .every((s) => SKIP_TITLES.has((s || '').trim().toLowerCase()));
   }
 
+  // Le Voyage dans la Lune (1902, public domain) — the most iconic film image.
   const TBD_ICON =
-    '<svg class="tbd-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">' +
-    '<rect x="10" y="5" width="28" height="38" rx="4" stroke="currentColor" stroke-width="2.2"/>' +
-    '<line x1="24" y1="17" x2="24" y2="31" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' +
-    '<line x1="17" y1="24" x2="31" y2="24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' +
-    '</svg>';
+    '<img class="tbd-moon" src="./assets/moon.jpg" alt="" loading="lazy">';
 
   function posterEl(film) {
     const slot = el('div', 'poster');
