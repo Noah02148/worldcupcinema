@@ -472,7 +472,9 @@
   function wireChrome() {
     document.querySelectorAll('.lang-btn').forEach((b) =>
       b.addEventListener('click', () => switchLang(b.dataset.lang)));
-    window.addEventListener('hashchange', render);
+    // Reset scroll to top on route changes (only hashchange — not lang/view
+    // switches or the score poll, which re-render in place).
+    window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
 
     // Contact: smooth-scroll to the footer without touching the hash router.
     const contact = document.querySelector('.contact-nav');
