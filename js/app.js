@@ -80,11 +80,14 @@
   };
   const posterUrlOf = (f) => (f ? cleanUrl(f.poster_url) : '');
 
-  // Prefer a self-hosted copy of a TMDB poster (loads where TMDB is blocked);
-  // the original URL is used as an onerror fallback.
-  const localPoster = (url) => {
+  // Poster source chain, tried in order onerror: jsDelivr CDN (cached globally,
+  // usually more reachable/faster in China than raw github.io) -> our own
+  // github.io copy -> the original TMDB URL. The film title shows behind if all
+  // fail. New posters not yet on the CDN simply fall back to the github.io copy.
+  const REPO_CDN = 'https://cdn.jsdelivr.net/gh/Noah02148/worldcupcinema@main/assets/posters/';
+  const posterSources = (url) => {
     const m = (url || '').match(/image\.tmdb\.org\/t\/p\/[^/]+\/(.+)$/);
-    return m ? './assets/posters/' + m[1] : null;
+    return m ? [REPO_CDN + m[1], './assets/posters/' + m[1], url] : [url];
   };
   function isTbdFilm(f) {
     if (!f) return true;
@@ -111,7 +114,7 @@
       img.decoding = 'async';
       img.alt = filmTitle(film);
 
-      const sources = [localPoster(url), url].filter(Boolean); // local first, then TMDB
+      const sources = posterSources(url); // jsDelivr -> github.io -> TMDB
       let si = 0;
       img.onerror = () => {
         si += 1;
