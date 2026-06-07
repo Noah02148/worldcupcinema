@@ -11,7 +11,11 @@ Outputs:
   data/results.json            (ESPN scoreboard snapshot)
   assets/posters/<file>.jpg    (every TMDB poster referenced by films)
 """
-import csv, io, json, os, urllib.parse, urllib.request
+import csv, io, json, os, re, urllib.parse, urllib.request
+
+# Posters are downsized on the way in: the wall shows them small, and smaller
+# files load much faster where GitHub Pages is throttled (mainland China).
+POSTER_SIZE = "w185"
 
 FILE_ID = "1oMyg38c0hP450iMUUz5ctdXt1S0bs3sj53luddQd3vU"
 TABS = ["countries", "films", "fixtures", "strings"]
@@ -68,8 +72,9 @@ def download_posters():
             skip += 1
             continue
         try:
+            dl = re.sub(r"/t/p/w\d+/", "/t/p/%s/" % POSTER_SIZE, u)  # downsize
             with open(dest, "wb") as f:
-                f.write(fetch(u, timeout=30))
+                f.write(fetch(dl, timeout=30))
             got += 1
         except Exception as e:
             miss += 1
