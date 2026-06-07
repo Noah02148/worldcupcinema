@@ -293,6 +293,94 @@
     });
   }
 
+  /* ---------- standings ---------- */
+
+  // Tally a country's completed group matches into a standings record.
+  function standingFor(country) {
+    const id = (country.country_id || '').trim();
+    const rec = { country, P: 0, W: 0, D: 0, L: 0, GF: 0, GA: 0, GD: 0, Pts: 0 };
+    (DATA.model.fixturesByCountry[id] || []).forEach((fx) => {
+      const r = DATA.resultForFixture(fx);
+      if (!r || !(r.state === 'post' || r.completed)) return;
+      const selfHome = (fx.home_id || '').trim() === id;
+      const gf = Number(selfHome ? r.home : r.away);
+      const ga = Number(selfHome ? r.away : r.home);
+      if (Number.isNaN(gf) || Number.isNaN(ga)) return;
+      rec.P += 1; rec.GF += gf; rec.GA += ga;
+      if (gf > ga) rec.W += 1; else if (gf < ga) rec.L += 1; else rec.D += 1;
+    });
+    rec.GD = rec.GF - rec.GA;
+    rec.Pts = rec.W * 3 + rec.D;
+    return rec;
+  }
+
+  function renderStandings() {
+    appEl.innerHTML = '';
+    setActiveTab('standings');
+    const container = el('div', 'standings');
+
+    DATA.model.groups.forEach((g) => {
+      const section = el('section', 'standings-group');
+      section.appendChild(el('h2', 'section-head', `${esc(t('group_label'))} ${esc(g)}`));
+
+      const table = el('div', 'standings-table');
+      table.appendChild(standingsHeader());
+
+      (DATA.model.countriesByGroup[g] || [])
+        .map(standingFor)
+        .sort((a, b) =>
+          b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF ||
+          countryName(a.country).localeCompare(countryName(b.country)))
+        .forEach((s, i) => table.appendChild(standingsRow(s, i + 1)));
+
+      section.appendChild(table);
+      container.appendChild(section);
+    });
+
+    appEl.appendChild(container);
+  }
+
+  function standingsHeader() {
+    const h = el('div', 'standings-row standings-head');
+    h.innerHTML =
+      '<span class="st-rank"></span>' +
+      '<span class="st-poster"></span>' +
+      `<span class="st-team">${esc(t('st_team'))}</span>` +
+      `<span class="st-n">${esc(t('st_p'))}</span>` +
+      `<span class="st-n st-wdl">${esc(t('st_w'))}</span>` +
+      `<span class="st-n st-wdl">${esc(t('st_d'))}</span>` +
+      `<span class="st-n st-wdl">${esc(t('st_l'))}</span>` +
+      `<span class="st-n">${esc(t('st_gd'))}</span>` +
+      `<span class="st-n st-pts">${esc(t('st_pts'))}</span>`;
+    return h;
+  }
+
+  function standingsRow(s, rank) {
+    const country = s.country;
+    const id = (country.country_id || '').trim();
+    const row = el('a', 'standings-row' + (rank <= 2 ? ' is-advancing' : ''));
+    row.href = `#/country/${encodeURIComponent(id)}`;
+
+    row.appendChild(el('span', 'st-rank', String(rank)));
+
+    const pw = el('span', 'st-poster');
+    pw.appendChild(posterEl(DATA.filmsList(id)[0] || null)); // first available film (slot 1, or next)
+    row.appendChild(pw);
+
+    const team = el('span', 'st-team');
+    team.innerHTML =
+      `<span class="flag">${esc(country.flag || '')}</span>` +
+      `<span class="cname">${esc(countryName(country) || id)}</span>`;
+    row.appendChild(team);
+
+    const gd = (s.GD > 0 ? '+' : '') + s.GD;
+    [['st-n', s.P], ['st-n st-wdl', s.W], ['st-n st-wdl', s.D], ['st-n st-wdl', s.L],
+     ['st-n', gd], ['st-n st-pts', s.Pts]].forEach(([cls, val]) =>
+      row.appendChild(el('span', cls, String(val))));
+
+    return row;
+  }
+
   function renderKnockout() {
     appEl.innerHTML = '';
     setActiveTab('knockout');
@@ -450,6 +538,7 @@
     const hash = location.hash || '#/';
     const m = hash.match(/^#\/country\/(.+)$/);
     if (m) return renderCountry(m[1]);
+    if (hash.startsWith('#/standings')) return renderStandings();
     if (hash.startsWith('#/knockout')) return renderKnockout();
     return renderGroupStage();
   }

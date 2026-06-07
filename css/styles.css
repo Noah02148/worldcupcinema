@@ -502,6 +502,67 @@ a { color: inherit; text-decoration: none; }
 
 .muted { color: var(--muted); font-size: 14px; }
 
+/* ---------- standings ---------- */
+
+.standings-table { display: flex; flex-direction: column; gap: 6px; }
+
+.standings-row {
+  display: grid;
+  grid-template-columns: 30px 44px 1fr 32px 32px 32px 32px 44px 48px;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+a.standings-row { transition: border-color 0.15s; }
+a.standings-row:hover { border-color: var(--border-2); }
+a.standings-row:hover .cname { color: var(--green); }
+.standings-row.is-advancing { box-shadow: inset 3px 0 0 var(--green); }
+
+.standings-head {
+  background: transparent;
+  border: 1px solid transparent;   /* keep columns aligned with rows */
+  padding-top: 2px;
+  padding-bottom: 2px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.st-rank {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.standings-row.is-advancing .st-rank { color: var(--green); }
+.st-poster .poster { border-radius: 6px; }
+/* TBD placeholder is too small for text in the standings thumbnail — moon only */
+.st-poster .tbd { padding: 4px; gap: 0; }
+.st-poster .tbd-title,
+.st-poster .tbd-sub { display: none; }
+.st-poster .tbd-moon { width: 82%; }
+.st-team { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.st-team .flag { font-size: 18px; flex: none; line-height: 1; }
+.st-team .cname {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.st-n {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.st-pts { color: var(--text); font-weight: 700; }
+
 /* ---------- contact / footer ---------- */
 
 .contact {
@@ -574,4 +635,12 @@ a { color: inherit; text-decoration: none; }
   .fr-result { grid-area: result; justify-self: end; }
   .fr-when { grid-area: when; }
   .fr-city { grid-area: city; text-align: right; }
+
+  /* standings: drop W/D/L to fit narrow screens */
+  .standings-row {
+    grid-template-columns: 22px 38px 1fr 32px 42px 44px;
+    gap: 7px;
+    padding: 7px 10px;
+  }
+  .st-wdl { display: none; }
 }
