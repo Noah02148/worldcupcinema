@@ -21,7 +21,7 @@ FILE_ID = "1oMyg38c0hP450iMUUz5ctdXt1S0bs3sj53luddQd3vU"
 TABS = ["countries", "films", "fixtures", "strings"]
 GVIZ = "https://docs.google.com/spreadsheets/d/{id}/gviz/tq?tqx=out:csv&sheet={tab}"
 ESPN = ("https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/"
-        "scoreboard?dates=20260611-20260627&limit=200")
+        "scoreboard?dates=20260611-20260719&limit=300")
 DATA_DIR = "data"
 POSTER_DIR = os.path.join("assets", "posters")
 UA = {"User-Agent": "Mozilla/5.0 (worldcupcinema-sync)"}

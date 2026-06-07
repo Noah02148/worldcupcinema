@@ -286,6 +286,9 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
 }
 .team-side:hover .cname { color: var(--green); }
+/* knockout slot placeholders (A1 / 3rd / W74) */
+.team-label .slot-code { color: var(--muted); letter-spacing: 0.5px; }
+.team-label .slot-sub { color: var(--faint); font-size: 11px; font-weight: 600; }
 
 /* ---------- poster (2:3) ---------- */
 
@@ -562,6 +565,93 @@ a.standings-row:hover .cname { color: var(--green); }
   font-variant-numeric: tabular-nums;
 }
 .st-pts { color: var(--text); font-weight: 700; }
+
+/* ---------- knockout bracket ---------- */
+
+.bracket {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  padding: 4px 0 20px;
+  -webkit-overflow-scrolling: touch;
+}
+.bround {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 196px;
+  padding: 0 14px;           /* 28px between columns = room for connectors */
+}
+.bround-title {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--green);
+  padding: 6px 0 12px;
+}
+.bcells { flex: 1; display: flex; flex-direction: column; }
+.bcell {
+  flex: 1 0 auto;          /* never shrink below the card; grow to fill the column */
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.bcard {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.bcard-no { font-size: 10px; color: var(--faint); padding: 3px 8px 0; }
+.bteam { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
+.bteam + .bteam { border-top: 1px solid var(--border); }
+.bmini { width: 26px; flex: none; }
+.bmini .poster { border-radius: 4px; }
+.bmini .tbd { padding: 2px; }
+.bmini .tbd-moon { width: 92%; }
+.bteam-main { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.bteam-main .flag { font-size: 15px; flex: none; line-height: 1; }
+.bteam-main .cname {
+  font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bteam-main .slot-code { color: var(--muted); font-weight: 700; }
+.bteam-main .slot-sub { color: var(--faint); font-size: 10px; margin-left: 4px; }
+a.bteam:hover .cname { color: var(--green); }
+.bteam.is-winner { background: rgba(198, 255, 0, 0.08); }
+.bteam.is-winner .cname { color: var(--green); }
+
+/* connectors: each pair joins to a vertical bus on the right, then into next round */
+.bround:not(.is-last) .bcell::after {
+  content: '';
+  position: absolute;
+  right: -14px;
+  width: 14px;
+  pointer-events: none;
+}
+.bround:not(.is-last) .bcell:nth-child(odd)::after {
+  top: 50%; height: 50%;
+  border-top: 2px solid var(--border-2);
+  border-right: 2px solid var(--border-2);
+}
+.bround:not(.is-last) .bcell:nth-child(even)::after {
+  bottom: 50%; height: 50%;
+  border-bottom: 2px solid var(--border-2);
+  border-right: 2px solid var(--border-2);
+}
+.bround:not(.is-first) .bcell::before {
+  content: '';
+  position: absolute;
+  left: -14px; width: 14px; height: 2px; top: 50%;
+  background: var(--border-2);
+  pointer-events: none;
+}
+
+.third-place { margin-top: 12px; max-width: 240px; }
+.third-place .bcell { flex: 0 0 auto; }
 
 /* ---------- contact / footer ---------- */
 

@@ -14,7 +14,7 @@
   // We try it live first (instant updates), then fall back to the baked
   // data/results.json snapshot when ESPN is unreachable (e.g. behind the GFW).
   const ESPN_URL =
-    'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260627&limit=200';
+    'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260719&limit=300';
   const RESULTS_LOCAL = './data/results.json';
 
   // Parsed + shaped model, populated by load().
@@ -89,9 +89,12 @@
       if (cs.length < 2) return;
       const type = (e.status && e.status.type) || {};
       const scores = {};
+      let winner = null;
       cs.forEach((c) => {
         const ab = c.team && c.team.abbreviation;
-        if (ab) scores[ab.trim()] = c.score;
+        if (!ab) return;
+        scores[ab.trim()] = c.score;
+        if (c.winner) winner = ab.trim();   // set by ESPN incl. on penalties
       });
       const ab0 = cs[0].team && cs[0].team.abbreviation;
       const ab1 = cs[1].team && cs[1].team.abbreviation;
@@ -101,6 +104,7 @@
         completed: !!type.completed,
         detail: type.shortDetail || type.detail || '',
         scores,
+        winner,
       };
     });
     const changed = JSON.stringify(next) !== JSON.stringify(model.resultsByPair);
@@ -192,5 +196,17 @@
       .map((slot) => bySlot[slot]);
   }
 
-  window.DATA = { model, load, filmForMatch, filmsList, fetchResults, resultForFixture };
+  /** Result for an arbitrary team pair (used for knockout matches). */
+  function resultForPair(a, b) {
+    const r = model.resultsByPair[pairKey(a, b)];
+    if (!r) return null;
+    return {
+      state: r.state, completed: r.completed, detail: r.detail, winner: r.winner,
+      home: r.scores[(a || '').trim()], away: r.scores[(b || '').trim()],
+    };
+  }
+
+  window.DATA = {
+    model, load, filmForMatch, filmsList, fetchResults, resultForFixture, resultForPair,
+  };
 })();

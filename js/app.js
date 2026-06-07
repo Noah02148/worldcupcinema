@@ -314,6 +314,15 @@
     return rec;
   }
 
+  // Group standings, sorted (points -> GD -> GF -> name).
+  function groupStandings(g) {
+    return (DATA.model.countriesByGroup[g] || [])
+      .map(standingFor)
+      .sort((a, b) =>
+        b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF ||
+        countryName(a.country).localeCompare(countryName(b.country)));
+  }
+
   function renderStandings() {
     appEl.innerHTML = '';
     setActiveTab('standings');
@@ -326,12 +335,7 @@
       const table = el('div', 'standings-table');
       table.appendChild(standingsHeader());
 
-      (DATA.model.countriesByGroup[g] || [])
-        .map(standingFor)
-        .sort((a, b) =>
-          b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF ||
-          countryName(a.country).localeCompare(countryName(b.country)))
-        .forEach((s, i) => table.appendChild(standingsRow(s, i + 1)));
+      groupStandings(g).forEach((s, i) => table.appendChild(standingsRow(s, i + 1)));
 
       section.appendChild(table);
       container.appendChild(section);
@@ -381,13 +385,193 @@
     return row;
   }
 
+  /* ---------- knockout bracket ---------- */
+
+  // Official 2026 bracket. Slot codes: "1A"/"2A" = group winner/runner-up;
+  // "3:C,E,F,H" = a best-third-place slot (constraint groups); "W74"/"L101" =
+  // winner/loser of that match. Rounds render in this order.
+  const BRACKET = [
+    { round: 'r32', matches: [
+      { n: 73, a: '2A', b: '2B' },
+      { n: 74, a: '1E', b: '3:A,B,C,D,F' },
+      { n: 75, a: '1F', b: '2C' },
+      { n: 76, a: '1C', b: '2F' },
+      { n: 77, a: '1I', b: '3:C,D,F,G,H' },
+      { n: 78, a: '2E', b: '2I' },
+      { n: 79, a: '1A', b: '3:C,E,F,H,I' },
+      { n: 80, a: '1L', b: '3:E,H,I,J,K' },
+      { n: 81, a: '1D', b: '3:B,E,F,I,J' },
+      { n: 82, a: '1G', b: '3:A,E,H,I,J' },
+      { n: 83, a: '2K', b: '2L' },
+      { n: 84, a: '1H', b: '2J' },
+      { n: 85, a: '1B', b: '3:E,F,G,I,J' },
+      { n: 86, a: '1J', b: '2H' },
+      { n: 87, a: '1K', b: '3:D,E,I,J,L' },
+      { n: 88, a: '2D', b: '2G' },
+    ] },
+    { round: 'r16', matches: [
+      { n: 89, a: 'W74', b: 'W77' }, { n: 90, a: 'W73', b: 'W75' },
+      { n: 91, a: 'W76', b: 'W78' }, { n: 92, a: 'W79', b: 'W80' },
+      { n: 93, a: 'W83', b: 'W84' }, { n: 94, a: 'W81', b: 'W82' },
+      { n: 95, a: 'W86', b: 'W88' }, { n: 96, a: 'W85', b: 'W87' },
+    ] },
+    { round: 'qf', matches: [
+      { n: 97, a: 'W89', b: 'W90' }, { n: 98, a: 'W93', b: 'W94' },
+      { n: 99, a: 'W91', b: 'W92' }, { n: 100, a: 'W95', b: 'W96' },
+    ] },
+    { round: 'sf', matches: [
+      { n: 101, a: 'W97', b: 'W98' }, { n: 102, a: 'W99', b: 'W100' },
+    ] },
+    { round: 'third', matches: [{ n: 103, a: 'L101', b: 'L102' }] },
+    { round: 'final', matches: [{ n: 104, a: 'W101', b: 'W102' }] },
+  ];
+
+  function buildKnockoutCtx() {
+    const ctx = { standings: {}, groupComplete: {}, wl: {}, matchByNum: {} };
+    DATA.model.groups.forEach((g) => {
+      ctx.standings[g] = groupStandings(g);
+      const fxs = DATA.model.fixtures.filter((fx) => (fx.group || '').trim() === g);
+      ctx.groupComplete[g] = fxs.length > 0 && fxs.every((fx) => {
+        const r = DATA.resultForFixture(fx);
+        return r && (r.state === 'post' || r.completed);
+      });
+    });
+    BRACKET.forEach((rd) => rd.matches.forEach((m) => { ctx.matchByNum[m.n] = m; }));
+    return ctx;
+  }
+
+  // country_id for a slot, or null if not yet determined.
+  function resolveSlot(code, ctx) {
+    if (/^[12][A-L]$/.test(code)) {
+      const g = code[1];
+      if (!ctx.groupComplete[g]) return null;
+      const rec = (ctx.standings[g] || [])[code[0] === '1' ? 0 : 1];
+      return rec ? (rec.country.country_id || '').trim() : null;
+    }
+    if (code.charAt(0) === 'W') return resolveWL(+code.slice(1), ctx).winner;
+    if (code.charAt(0) === 'L') return resolveWL(+code.slice(1), ctx).loser;
+    return null; // best-third-place slot "3:..."
+  }
+
+  function resolveWL(n, ctx) {
+    if (ctx.wl[n]) return ctx.wl[n];
+    ctx.wl[n] = { winner: null, loser: null }; // memo + cycle guard
+    const m = ctx.matchByNum[n];
+    const out = { winner: null, loser: null };
+    if (m) {
+      const a = resolveSlot(m.a, ctx);
+      const b = resolveSlot(m.b, ctx);
+      if (a && b) {
+        const r = DATA.resultForPair(a, b);
+        if (r && (r.completed || r.state === 'post') && r.winner) {
+          out.winner = r.winner;
+          out.loser = r.winner === a ? b : a;
+        }
+      }
+    }
+    ctx.wl[n] = out;
+    return out;
+  }
+
+  function slotLabel(code) {
+    if (/^[12][A-L]$/.test(code)) return { main: code[1] + code[0] };          // 1A -> A1
+    if (code.charAt(0) === '3') return { main: t('ko_third_slot'), sub: code.slice(2).split(',').join('/') };
+    return { main: code };                                                      // W74 / L101
+  }
+
+  function moonPoster() {
+    const slot = el('div', 'poster poster--empty poster--tbd');
+    slot.innerHTML = '<div class="tbd"><img class="tbd-moon" src="./assets/moon.jpg" alt="" loading="lazy"></div>';
+    return slot;
+  }
+
+  // One compact team row: mini poster (or moon) + flag + name, or a slot label.
+  function bTeam(code, ctx, wl) {
+    const id = resolveSlot(code, ctx);
+    const mini = el('span', 'bmini');
+    if (id) {
+      const country = DATA.model.countriesById[id];
+      const row = el('a', 'bteam' + (wl.winner === id ? ' is-winner' : ''));
+      row.href = `#/country/${encodeURIComponent(id)}`;
+      mini.appendChild(posterEl(DATA.filmsList(id)[0] || null));
+      row.appendChild(mini);
+      row.appendChild(el('span', 'bteam-main',
+        `<span class="flag">${esc((country && country.flag) || '')}</span>` +
+        `<span class="cname">${esc(countryName(country) || id)}</span>`));
+      return row;
+    }
+    const lbl = slotLabel(code);
+    const row = el('div', 'bteam');
+    mini.appendChild(moonPoster());
+    row.appendChild(mini);
+    row.appendChild(el('span', 'bteam-main',
+      `<span class="cname slot-code">${esc(lbl.main)}</span>` +
+      (lbl.sub ? `<span class="slot-sub">${esc(lbl.sub)}</span>` : '')));
+    return row;
+  }
+
+  function bMatch(m, ctx) {
+    const card = el('div', 'bcard');
+    card.appendChild(el('div', 'bcard-no', 'M' + m.n));
+    const wl = resolveWL(m.n, ctx); // for winner highlight
+    card.appendChild(bTeam(m.a, ctx, wl));
+    card.appendChild(bTeam(m.b, ctx, wl));
+    return card;
+  }
+
+  // Order matches per round so each pair's two feeders are adjacent (visual
+  // bracket order), derived top-down from the final via the W##/L## references.
+  function bracketColumns() {
+    const byNum = {};
+    BRACKET.forEach((rd) => rd.matches.forEach((m) => { byNum[m.n] = m; }));
+    const feeders = (m) => [m.a, m.b]
+      .map((c) => { const x = /^[WL](\d+)$/.exec(c); return x ? +x[1] : null; });
+
+    const cols = [[104]]; // final
+    let cur = [104];
+    for (let i = 0; i < 4; i++) {
+      const next = [];
+      cur.forEach((n) => feeders(byNum[n]).forEach((f) => { if (f) next.push(f); }));
+      if (!next.length) break;
+      cols.unshift(next);
+      cur = next;
+    }
+    return cols.map((nums) => nums.map((n) => byNum[n])); // [r32, r16, qf, sf, final]
+  }
+
   function renderKnockout() {
     appEl.innerHTML = '';
     setActiveTab('knockout');
-    const ph = el('div', 'placeholder');
-    ph.appendChild(el('div', 'ph-big', esc(t('knockout_tbd'))));
-    ph.appendChild(el('div', 'ph-sub', esc(t('knockout_hint'))));
-    appEl.appendChild(ph);
+    const ctx = buildKnockoutCtx();
+    const cols = bracketColumns();
+    const keys = ['r32', 'r16', 'qf', 'sf', 'final'];
+
+    const bracket = el('div', 'bracket');
+    cols.forEach((matches, ci) => {
+      const round = el('div', 'bround' +
+        (ci === 0 ? ' is-first' : '') + (ci === cols.length - 1 ? ' is-last' : ''));
+      round.appendChild(el('div', 'bround-title', esc(t('ko_' + keys[ci]))));
+      const cells = el('div', 'bcells');
+      matches.forEach((m) => {
+        const cell = el('div', 'bcell');
+        cell.appendChild(bMatch(m, ctx));
+        cells.appendChild(cell);
+      });
+      round.appendChild(cells);
+      bracket.appendChild(round);
+    });
+    appEl.appendChild(bracket);
+
+    // third-place match sits off the main tree
+    const third = (BRACKET.find((r) => r.round === 'third') || {}).matches[0];
+    if (third) {
+      const tp = el('div', 'third-place');
+      tp.appendChild(el('h2', 'section-head', esc(t('ko_third'))));
+      const cell = el('div', 'bcell');
+      cell.appendChild(bMatch(third, ctx));
+      tp.appendChild(cell);
+      appEl.appendChild(tp);
+    }
   }
 
   function renderCountry(countryId) {
