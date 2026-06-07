@@ -1,0 +1,40 @@
+name: Sync sheet, results & posters
+
+# Bakes the Google Sheet + ESPN results + TMDB posters into the repo so the site
+# loads from its own origin (works where Google/TMDB are blocked). Runs on a
+# schedule and can be triggered manually from the Actions tab.
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes (GitHub may delay scheduled runs)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - run: python build_data.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "wcc-sync[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data assets/posters
+          if git diff --staged --quiet; then
+            echo "No changes."
+          else
+            git commit -m "data: sync sheet, results & posters [skip ci]"
+            git push
+          fi
