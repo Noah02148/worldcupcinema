@@ -1,18 +1,21 @@
-/* data.js — runtime fetch + parse of the four gviz CSV tabs, then shape them
- * into lookup structures the renderer can use. No backend, no API key.
+/* data.js — load + parse the four data tabs, then shape them into lookup
+ * structures the renderer can use. No backend, no API key.
+ *
+ * Data is BAKED into the repo (data/*.csv, data/results.json) by build_data.py
+ * via a scheduled GitHub Action, and served from our own origin. This avoids a
+ * runtime dependency on Google Sheets / TMDB, both blocked in mainland China.
  */
 (function () {
   'use strict';
 
-  const FILE_ID = '1oMyg38c0hP450iMUUz5ctdXt1S0bs3sj53luddQd3vU';
-  const csvUrl = (tab) =>
-    `https://docs.google.com/spreadsheets/d/${FILE_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+  const csvUrl = (tab) => `./data/${tab}.csv`;
 
-  // Live scores: ESPN's unofficial scoreboard for the FIFA World Cup. No key,
-  // returns `access-control-allow-origin: *`, and its team abbreviations match
-  // our country_ids exactly. One ranged request covers the whole group stage.
-  const RESULTS_URL =
+  // Live scores: ESPN's unofficial FIFA World Cup scoreboard (no key, CORS *).
+  // We try it live first (instant updates), then fall back to the baked
+  // data/results.json snapshot when ESPN is unreachable (e.g. behind the GFW).
+  const ESPN_URL =
     'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260627&limit=200';
+  const RESULTS_LOCAL = './data/results.json';
 
   // Parsed + shaped model, populated by load().
   const model = {
@@ -60,11 +63,25 @@
     return model;
   }
 
-  /** Fetch ESPN scoreboard and (re)build resultsByPair. Returns true if changed. */
+  function fetchJson(url, ms) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, { cache: 'no-store', signal: ctrl.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .finally(() => clearTimeout(timer));
+  }
+
+  /** (Re)build resultsByPair from ESPN (live) or the baked snapshot. Returns true if changed. */
   async function fetchResults() {
-    const res = await fetch(RESULTS_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    let data;
+    try {
+      data = await fetchJson(ESPN_URL, 5000);        // live, works outside China
+    } catch (e) {
+      data = await fetchJson(RESULTS_LOCAL, 8000);   // baked fallback (~15 min old)
+    }
     const next = {};
     (data.events || []).forEach((e) => {
       const comp = (e.competitions && e.competitions[0]) || {};

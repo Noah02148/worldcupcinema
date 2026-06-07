@@ -63,6 +63,13 @@
     return /^https?:\/\//i.test(u) ? u : '';
   };
   const posterUrlOf = (f) => (f ? cleanUrl(f.poster_url) : '');
+
+  // Prefer a self-hosted copy of a TMDB poster (loads where TMDB is blocked);
+  // the original URL is used as an onerror fallback.
+  const localPoster = (url) => {
+    const m = (url || '').match(/image\.tmdb\.org\/t\/p\/[^/]+\/(.+)$/);
+    return m ? './assets/posters/' + m[1] : null;
+  };
   function isTbdFilm(f) {
     if (!f) return true;
     return [f.title_zh, f.title_en, f.title_original]
@@ -80,8 +87,10 @@
     if (url) {
       const img = el('img', 'poster-img');
       img.loading = 'lazy';
-      img.src = url;
       img.alt = filmTitle(film);
+      const local = localPoster(url);
+      img.src = local || url;
+      if (local) img.onerror = () => { img.onerror = null; img.src = url; };
       slot.appendChild(img);
       addPosterHover(slot, film); // wall hides title; hover reveals
     } else if (isTbdFilm(film)) {
