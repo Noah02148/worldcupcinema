@@ -85,12 +85,25 @@
     const url = posterUrlOf(film);
 
     if (url) {
+      // Title sits behind the image so a slow/failed poster (common where
+      // github.io is throttled) degrades to the film name, never a blank slot.
+      // The <img> covers it once it paints.
+      slot.classList.add('poster--empty');
+      slot.appendChild(el('div', 'poster-fallback', esc(filmTitle(film))));
+
       const img = el('img', 'poster-img');
       img.loading = 'lazy';
+      img.decoding = 'async';
       img.alt = filmTitle(film);
-      const local = localPoster(url);
-      img.src = local || url;
-      if (local) img.onerror = () => { img.onerror = null; img.src = url; };
+
+      const sources = [localPoster(url), url].filter(Boolean); // local first, then TMDB
+      let si = 0;
+      img.src = sources[si];
+      img.onerror = () => {
+        si += 1;
+        if (si < sources.length) img.src = sources[si];
+        else { img.onerror = null; img.style.display = 'none'; } // reveal title behind
+      };
       slot.appendChild(img);
       addPosterHover(slot, film); // wall hides title; hover reveals
     } else if (isTbdFilm(film)) {
