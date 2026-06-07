@@ -72,7 +72,7 @@ def download_posters():
             skip += 1
             continue
         try:
-            dl = re.sub(r"/t/p/w\d+/", "/t/p/%s/" % POSTER_SIZE, u)  # downsize
+            dl = re.sub(r"/t/p/[^/]+/", "/t/p/%s/" % POSTER_SIZE, u)  # normalize any size -> w185
             with open(dest, "wb") as f:
                 f.write(fetch(dl, timeout=30))
             got += 1
