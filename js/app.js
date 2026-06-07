@@ -55,6 +55,22 @@
 
   /* ---------- poster ---------- */
 
+  // Lazy-load posters but start ~1.5 screens early, so on a slow connection
+  // they're usually ready by the time you scroll to them (native loading="lazy"
+  // starts too late and shows a 1–2s blank).
+  const lazyIO = ('IntersectionObserver' in window)
+    ? new IntersectionObserver((entries, obs) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) { obs.unobserve(e.target); if (e.target._start) e.target._start(); }
+        });
+      }, { rootMargin: '1400px 0px' })
+    : null;
+
+  function observeLazy(img, start) {
+    if (lazyIO) { img._start = start; lazyIO.observe(img); }
+    else start();
+  }
+
   // The fill script writes the literal "待定" into url cells it couldn't resolve,
   // so treat those (and TBD titles) as "not set" rather than real values.
   const SKIP_TITLES = new Set(['', '待定', 'tbd', 'tbd.']);
@@ -92,19 +108,18 @@
       slot.appendChild(el('div', 'poster-fallback', esc(filmTitle(film))));
 
       const img = el('img', 'poster-img');
-      img.loading = 'lazy';
       img.decoding = 'async';
       img.alt = filmTitle(film);
 
       const sources = [localPoster(url), url].filter(Boolean); // local first, then TMDB
       let si = 0;
-      img.src = sources[si];
       img.onerror = () => {
         si += 1;
         if (si < sources.length) img.src = sources[si];
         else { img.onerror = null; img.style.display = 'none'; } // reveal title behind
       };
       slot.appendChild(img);
+      observeLazy(img, () => { img.src = sources[0]; }); // preload ~1.5 screens early
       addPosterHover(slot, film); // wall hides title; hover reveals
     } else if (isTbdFilm(film)) {
       // unified placeholder for a not-yet-chosen film
@@ -427,6 +442,7 @@
 
   function render() {
     if (!DATA.model.loaded) return;
+    if (lazyIO) lazyIO.disconnect(); // drop observations from the previous render
     applyStaticI18n();
     const hash = location.hash || '#/';
     const m = hash.match(/^#\/country\/(.+)$/);
