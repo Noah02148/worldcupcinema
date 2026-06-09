@@ -233,7 +233,7 @@
   function renderByDate(container) {
     // "Today" in the current language's timezone, so it tracks the same clock
     // the times are shown in (zh -> Beijing, en -> ET). `?today=YYYY-MM-DD`
-    // overrides it for previewing the live ordering before the tournament.
+    // overrides it for previewing before the tournament.
     const override = new URLSearchParams(location.search).get('today');
     const todayKey = /^\d{4}-\d{2}-\d{2}$/.test(override || '')
       ? override : I18N.dateKey(new Date());
@@ -245,31 +245,23 @@
       buckets.get(key).fixtures.push(fx);
     });
 
-    const all = [...buckets.values()].sort((a, b) => a.key.localeCompare(b.key));
-    const todayBuckets = all.filter((b) => b.key === todayKey);
-    const future = all.filter((b) => b.key > todayKey);          // ascending: next up first
-    const past = all.filter((b) => b.key < todayKey).reverse();   // most recent completed first
-
-    const renderDay = (b, isToday) => {
-      const section = el('section', 'day-section' + (isToday ? ' is-today' : ''));
-      const label = (isToday ? t('today') + ' · ' : '') + I18N.formatDateFull(b.instant);
-      section.appendChild(el('h2', 'section-head', esc(label)));
-      const grid = el('div', 'card-grid');
-      b.fixtures
-        .slice()
-        .sort((a, c) => a.instant - c.instant)
-        .forEach((fx) => grid.appendChild(matchCard(fx)));
-      section.appendChild(grid);
-      container.appendChild(section);
-    };
-
-    // Upcoming first (today pinned at the very top), completed below a divider.
-    todayBuckets.forEach((b) => renderDay(b, true));
-    future.forEach((b) => renderDay(b, false));
-    if (past.length) {
-      container.appendChild(el('h2', 'completed-head', esc(t('completed_heading'))));
-      past.forEach((b) => renderDay(b, false));
-    }
+    // Always chronological — earliest day at the top. Today's section is only
+    // tagged (so the "今日比赛" button can jump to it); its position never moves.
+    [...buckets.values()]
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .forEach((b) => {
+        const isToday = b.key === todayKey;
+        const section = el('section', 'day-section' + (isToday ? ' is-today' : ''));
+        const label = (isToday ? t('today') + ' · ' : '') + I18N.formatDateFull(b.instant);
+        section.appendChild(el('h2', 'section-head', esc(label)));
+        const grid = el('div', 'card-grid');
+        b.fixtures
+          .slice()
+          .sort((a, c) => a.instant - c.instant)
+          .forEach((fx) => grid.appendChild(matchCard(fx)));
+        section.appendChild(grid);
+        container.appendChild(section);
+      });
   }
 
   function renderByGroup(container) {
@@ -755,6 +747,28 @@
       e.preventDefault();
       const sec = document.getElementById('contact');
       if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // Today's matches: jump to the pinned "today" section. That block only
+    // exists on the group-stage page in date view, so route there first if
+    // needed, then smooth-scroll to it (or to the top if nothing is on today).
+    const today = document.querySelector('.today-nav');
+    if (today) today.addEventListener('click', (e) => {
+      e.preventDefault();
+      const scrollToToday = () => {
+        const sec = document.querySelector('.day-section.is-today');
+        if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        else window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+      if ((location.hash || '#/') !== '#/' || ui.view !== 'date') {
+        ui.view = 'date';
+        try { localStorage.setItem('wcc_view', 'date'); } catch (err) {}
+        location.hash = '#/';
+        render();              // re-render synchronously so the section exists
+        setTimeout(scrollToToday, 0); // after the hashchange handler's scroll-to-top
+      } else {
+        scrollToToday();
+      }
     });
   }
 
