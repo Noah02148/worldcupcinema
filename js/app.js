@@ -420,39 +420,51 @@
       buckets.get(key).fixtures.push(fx);
     });
 
-    // Always chronological — earliest day at the top. Today's section is only
-    // tagged (so the "今日比赛" button can jump to it); its position never moves.
-    [...buckets.values()]
-      .sort((a, b) => a.key.localeCompare(b.key))
-      .forEach((b) => {
-        const isToday = b.key === todayKey;
-        const section = el('section', 'day-section' + (isToday ? ' is-today' : ''));
-        const label = (isToday ? t('today') + ' · ' : '') + I18N.formatDateFull(b.instant);
-        section.appendChild(el('h2', 'section-head', esc(label)));
+    // Always chronological — earliest day at the top.
+    const all = [...buckets.values()].sort((a, b) => a.key.localeCompare(b.key));
 
-        // Parlay visibility (kept low-key, not betting-flashy):
-        //  · today, still in progress → auto-show (graded live as legs finish)
-        //  · upcoming day              → "生成 Claude AI 预测方案" button
-        //  · finished day              → "查看 Claude AI 预测方案" (review + verdict)
-        if (PREDICTIONS[b.key] && PREDICTIONS[b.key].groups) {
-          const allDone = b.fixtures.every((fx) => isFinished(fx));
-          const anyDone = b.fixtures.some((fx) => isFinished(fx));
-          if ((isToday && !allDone) || revealedDays.has(b.key)) {
-            const slip = parlayCard(b.key, b.fixtures);
-            if (slip) section.appendChild(slip);
-          } else {
-            section.appendChild(revealButton(b, section, anyDone));
-          }
+    // Scroll target for the "今日比赛" button: today if it still has an unplayed
+    // match, else the next day that does (so after today wraps up it jumps to
+    // tomorrow's upcoming matches).
+    const focus = all.find((b) => b.key >= todayKey && b.fixtures.some((fx) => !isFinished(fx)));
+    const focusKey = focus ? focus.key : todayKey;
+
+    // Only the next two day-sections get a "生成" button (keeps it from looking
+    // like a betting site; days further out stay hidden until they're closer).
+    const generatable = new Set(all.filter((b) => b.key > todayKey).slice(0, 2).map((b) => b.key));
+
+    all.forEach((b) => {
+      const isToday = b.key === todayKey;
+      const section = el('section', 'day-section' +
+        (isToday ? ' is-today' : '') + (b.key === focusKey ? ' is-focus' : ''));
+      const label = (isToday ? t('today') + ' · ' : '') + I18N.formatDateFull(b.instant);
+      section.appendChild(el('h2', 'section-head', esc(label)));
+
+      // Parlay visibility (kept low-key):
+      //  · today, still in progress → auto-show (graded live as legs finish)
+      //  · next two upcoming days   → "生成 Claude AI 预测方案" button
+      //  · further-out days         → nothing yet
+      //  · finished / past days     → "查看 Claude AI 预测方案" (review + verdict)
+      if (PREDICTIONS[b.key] && PREDICTIONS[b.key].groups) {
+        const allDone = b.fixtures.every((fx) => isFinished(fx));
+        if ((isToday && !allDone) || revealedDays.has(b.key)) {
+          const slip = parlayCard(b.key, b.fixtures);
+          if (slip) section.appendChild(slip);
+        } else if (b.key > todayKey) {
+          if (generatable.has(b.key)) section.appendChild(revealButton(b, section, false));
+        } else {
+          section.appendChild(revealButton(b, section, true)); // today all done, or past
         }
+      }
 
-        const grid = el('div', 'card-grid');
-        b.fixtures
-          .slice()
-          .sort((a, c) => a.instant - c.instant)
-          .forEach((fx) => grid.appendChild(matchCard(fx)));
-        section.appendChild(grid);
-        container.appendChild(section);
-      });
+      const grid = el('div', 'card-grid');
+      b.fixtures
+        .slice()
+        .sort((a, c) => a.instant - c.instant)
+        .forEach((fx) => grid.appendChild(matchCard(fx)));
+      section.appendChild(grid);
+      container.appendChild(section);
+    });
   }
 
   function renderByGroup(container) {
@@ -953,7 +965,10 @@
     if (today) today.addEventListener('click', (e) => {
       e.preventDefault();
       const scrollToToday = () => {
-        const sec = document.querySelector('.day-section.is-today');
+        // is-focus = today if it still has unplayed matches, else the next day
+        // that does; fall back to today's section, then the top.
+        const sec = document.querySelector('.day-section.is-focus') ||
+                    document.querySelector('.day-section.is-today');
         if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
         else window.scrollTo({ top: 0, behavior: 'smooth' });
       };
