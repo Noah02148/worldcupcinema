@@ -730,9 +730,9 @@ a.bteam:hover .cname { color: var(--green); }
   .contact-nav { grid-area: contact; justify-self: end; margin-left: 0; }
   .today-nav {
     grid-area: today;
-    justify-self: stretch;
-    justify-content: center;
-    padding: 9px 14px;
+    justify-self: start;
+    padding: 5px 13px;
+    font-size: 13px;
   }
   .brand-name { font-size: 15px; }
   .app { padding: 18px 14px 48px; }
