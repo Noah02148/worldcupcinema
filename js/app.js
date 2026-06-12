@@ -235,13 +235,13 @@
     return 'passed';
   }
 
-  // Reveal button: "生成 Claude AI 预测方案" for upcoming days, or
-  // "查看 Claude AI 预测方案" (review) once a day has results.
+  // Reveal button: always "查看 Claude AI 预测方案"; the icon hints upcoming (🔮)
+  // vs already-played/review (📊).
   function revealButton(bucket, section, settled) {
     const btn = el('button', 'parlay-reveal');
     btn.innerHTML =
       `<span class="parlay-reveal-icon" aria-hidden="true">${settled ? '📊' : '🔮'}</span>` +
-      `<span>${esc(t(settled ? 'view_parlay' : 'generate_parlay'))}</span>`;
+      `<span>${esc(t('view_parlay'))}</span>`;
     btn.addEventListener('click', () => {
       revealedDays.add(bucket.key);
       const slip = parlayCard(bucket.key, bucket.fixtures);
