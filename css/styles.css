@@ -715,25 +715,27 @@ a.bteam:hover .cname { color: var(--green); }
   /* deterministic 2x2 header so the layout is identical in zh and en */
   .header-inner {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
     grid-template-areas:
-      "brand   lang"
-      "tabs    contact"
-      "today   today";
-    gap: 10px 12px;
+      "brand   brand   lang"
+      "tabs    today   contact";
+    gap: 10px 8px;
     padding: 10px 14px;
     align-items: center;
   }
   .brand { grid-area: brand; }
   .lang-switch { grid-area: lang; justify-self: end; }
-  .tabs { grid-area: tabs; margin-left: 0; }
-  .contact-nav { grid-area: contact; justify-self: end; margin-left: 0; }
+  .tabs { grid-area: tabs; margin-left: 0; gap: 4px; }
+  .tab { padding: 6px 11px; }
+  /* 今日比赛 + 影片投稿 share the second row, like the single nav row on desktop */
   .today-nav {
     grid-area: today;
-    justify-self: start;
-    padding: 5px 13px;
+    justify-self: end;
+    margin-left: 0;
+    padding: 5px 11px;
     font-size: 13px;
   }
+  .contact-nav { grid-area: contact; justify-self: end; margin-left: 0; padding: 5px 11px; }
   .brand-name { font-size: 15px; }
   .app { padding: 18px 14px 48px; }
   .card-grid { grid-template-columns: 1fr; }
