@@ -362,12 +362,13 @@
 
     groups.forEach((grp, gi) => {
       const g = el('div', 'parlay-group');
-      const headParts = [];
-      if (multi) headParts.push(`<span class="parlay-group-label">${esc(t('parlay_group', { n: gi + 1 }))}</span>`);
-      if (grp.verdict) headParts.push(
-        `<span class="parlay-verdict is-${grp.verdict}">${esc(t('verdict_' + grp.verdict))}</span>`);
-      if (headParts.length) g.appendChild(el('div', 'parlay-group-head', headParts.join('')));
+      if (multi) g.appendChild(el('div', 'parlay-group-head',
+        `<span class="parlay-group-label">${esc(t('parlay_group', { n: gi + 1 }))}</span>`));
       grp.tickets.forEach((tk) => g.appendChild(tk));
+      // verdict sits at the bottom of the group: 预测结果：主推过关成功
+      if (grp.verdict) g.appendChild(el('div', 'parlay-result',
+        `<span class="parlay-result-label">${esc(t('verdict_label'))}</span>` +
+        `<span class="parlay-verdict is-${grp.verdict}">${esc(t('verdict_' + grp.verdict))}</span>`));
       card.appendChild(g);
     });
     if (multi) card.appendChild(el('div', 'parlay-hint', esc(t('parlay_combine_hint'))));

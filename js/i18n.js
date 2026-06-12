@@ -61,6 +61,7 @@
     parlay_combine_hint: { zh: '各组可自由搭配,例如各取一注组成四串一', en: 'Mix one ticket per combo freely — e.g. into your own 4-leg' },
     generate_parlay: { zh: '生成 Claude AI 预测方案', en: 'Generate Claude AI prediction' },
     view_parlay:     { zh: '查看 Claude AI 预测方案', en: 'View Claude AI prediction' },
+    verdict_label:   { zh: '预测结果:',     en: 'Result:' },
     verdict_main:    { zh: '主推过关成功',  en: 'Main hit' },
     verdict_alt:     { zh: '副推过关成功',  en: 'Hedge hit' },
     verdict_fail:    { zh: '过关失败',      en: 'Missed' },
