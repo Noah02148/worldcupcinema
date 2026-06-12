@@ -170,6 +170,49 @@ a { color: inherit; text-decoration: none; }
   margin-top: 4px;
 }
 
+/* Claude Fable 5 parlay slip, shown above a day's match grid */
+.parlay {
+  margin: 0 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background:
+    linear-gradient(rgba(198, 255, 0, 0.05), rgba(198, 255, 0, 0.05)), var(--card);
+  padding: 12px 14px;
+}
+.parlay-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.parlay-mark { font-size: 15px; }
+.parlay-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--green);
+}
+.parlay-tag {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0c0c0c;
+  background: var(--green);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.parlay-list { display: flex; flex-direction: column; gap: 8px; }
+.parlay-row { display: flex; align-items: center; gap: 10px; }
+.parlay-team { display: flex; align-items: center; gap: 7px; min-width: 0; font-weight: 600; }
+.parlay-team .flag { font-size: 18px; flex: none; }
+.parlay-team .cname { white-space: nowrap; }
+.parlay-vs { color: var(--muted); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.parlay-pick {
+  margin-left: auto;
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0c0c0c;
+  background: var(--green);
+  border-radius: 999px;
+  padding: 3px 11px;
+}
+
 /* divider above completed days */
 .completed-head {
   font-size: 13px;

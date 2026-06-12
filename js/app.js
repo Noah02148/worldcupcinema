@@ -200,6 +200,68 @@
     return side;
   }
 
+  /* ---------- Claude Fable 5 parlay picks ---------- */
+
+  const PREDICTIONS = window.PREDICTIONS || {};
+
+  // Predicted winning country_id for a fixture, the literal 'DRAW', or null.
+  function predictionFor(fx) {
+    return PREDICTIONS[(fx.match_id || '').trim()] || null;
+  }
+
+  // One combined parlay slip for a day's fixtures: a single pick per match,
+  // no reasoning shown. Returns null when none of the day's matches has a pick.
+  function parlayCard(fixtures) {
+    const picks = fixtures
+      .slice()
+      .sort((a, b) => a.instant - b.instant)
+      .map((fx) => ({ fx, pick: predictionFor(fx) }))
+      .filter((p) => p.pick);
+    if (!picks.length) return null;
+
+    const card = el('section', 'parlay');
+    const head = el('div', 'parlay-head');
+    head.innerHTML =
+      `<span class="parlay-mark" aria-hidden="true">🎟</span>` +
+      `<span class="parlay-title">${esc(t('parlay_title'))}</span>` +
+      (picks.length > 1
+        ? `<span class="parlay-tag">${esc(picks.length)}${esc(t('parlay_combo'))}</span>` : '');
+    card.appendChild(head);
+
+    const list = el('div', 'parlay-list');
+    picks.forEach(({ fx, pick }) => {
+      const home = DATA.model.countriesById[(fx.home_id || '').trim()];
+      const away = DATA.model.countriesById[(fx.away_id || '').trim()];
+      const row = el('div', 'parlay-row');
+
+      if (pick === 'DRAW') {
+        row.innerHTML =
+          `<span class="parlay-team">` +
+            `<span class="flag">${esc((home && home.flag) || '')}</span>` +
+            `<span class="cname">${esc(countryName(home) || fx.home_id)}</span>` +
+            `<span class="parlay-vs">${esc(t('vs'))}</span>` +
+            `<span class="flag">${esc((away && away.flag) || '')}</span>` +
+            `<span class="cname">${esc(countryName(away) || fx.away_id)}</span>` +
+          `</span>` +
+          `<span class="parlay-pick">${esc(t('pick_draw'))}</span>`;
+      } else {
+        const win = DATA.model.countriesById[pick];
+        const oppId = pick === (fx.home_id || '').trim() ? fx.away_id : fx.home_id;
+        const opp = DATA.model.countriesById[(oppId || '').trim()];
+        row.innerHTML =
+          `<span class="parlay-team">` +
+            `<span class="flag">${esc((win && win.flag) || '')}</span>` +
+            `<span class="cname">${esc(countryName(win) || pick)}</span>` +
+            `<span class="parlay-vs">${esc(t('vs'))} ${esc(countryName(opp) || oppId)}</span>` +
+          `</span>` +
+          `<span class="parlay-pick">${esc(t('pick_win'))}</span>`;
+      }
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    return card;
+  }
+
   /* ---------- group-stage view toggle ---------- */
 
   function viewToggle() {
@@ -254,6 +316,8 @@
         const section = el('section', 'day-section' + (isToday ? ' is-today' : ''));
         const label = (isToday ? t('today') + ' · ' : '') + I18N.formatDateFull(b.instant);
         section.appendChild(el('h2', 'section-head', esc(label)));
+        const slip = parlayCard(b.fixtures);
+        if (slip) section.appendChild(slip);
         const grid = el('div', 'card-grid');
         b.fixtures
           .slice()
