@@ -27,23 +27,26 @@ window.PREDICTIONS = {
     ] },
   ] },
 
-  // 北京时间 6/13 — M03 加拿大vs波黑, M04 美国vs巴拉圭
+  // 北京时间 6/13 — 赔率: M03 加拿大1.62/平3.32, M04 美国1.77/平3.25。
+  // 美国是更弱的热门(1.77)且平赔3.25不低 -> 副推对冲美国平
   '2026-06-13': { groups: [
     { tickets: [
-      { label: 'parlay_main', stake: 60, picks: { M03: 'CAN', M04: 'USA' } },
-      { label: 'parlay_alt', stake: 40, dim: true, picks: { M03: 'DRAW', M04: 'USA' } },
+      { label: 'parlay_main', stake: 65, picks: { M03: 'CAN', M04: 'USA' } },
+      { label: 'parlay_alt', stake: 35, dim: true, picks: { M03: 'CAN', M04: 'DRAW' } },
     ] },
   ] },
 
-  // 北京时间 6/14 — 4 场拆两组。M05 卡塔尔vs瑞士, M06 巴西vs摩洛哥 | M07 海地vs苏格兰, M08 澳大利亚vs土耳其
+  // 北京时间 6/14 — 4 场拆两组。
+  // 组合1: M05 卡塔尔vs瑞士(瑞士超级大热,0盘已封), M06 巴西1.51/平3.55 -> 对冲巴西平
+  // 组合2: M07 海地vs苏格兰(苏格兰1.33铁板), M08 土耳其1.55/平3.45 -> 对冲更弱的土耳其平
   '2026-06-14': { groups: [
-    { tickets: [ // 前两场
-      { label: 'parlay_main', stake: 70, picks: { M05: 'SUI', M06: 'BRA' } },
-      { label: 'parlay_alt', stake: 30, dim: true, picks: { M05: 'SUI', M06: 'DRAW' } },
+    { tickets: [ // 前两场:双大热,主推为主
+      { label: 'parlay_main', stake: 76, picks: { M05: 'SUI', M06: 'BRA' } },
+      { label: 'parlay_alt', stake: 24, dim: true, picks: { M05: 'SUI', M06: 'DRAW' } },
     ] },
     { tickets: [ // 后两场
-      { label: 'parlay_main', stake: 60, picks: { M07: 'SCO', M08: 'TUR' } },
-      { label: 'parlay_alt', stake: 40, dim: true, picks: { M07: 'DRAW', M08: 'TUR' } },
+      { label: 'parlay_main', stake: 72, picks: { M07: 'SCO', M08: 'TUR' } },
+      { label: 'parlay_alt', stake: 28, dim: true, picks: { M07: 'SCO', M08: 'DRAW' } },
     ] },
   ] },
 
