@@ -375,33 +375,13 @@
     return card;
   }
 
-  /* ---------- group-stage view toggle ---------- */
-
-  function viewToggle() {
-    const wrap = el('div', 'view-toggle');
-    [['date', 'view_by_date'], ['group', 'view_by_group']].forEach(([v, key]) => {
-      const b = el('button', 'view-btn' + (ui.view === v ? ' is-active' : ''), esc(t(key)));
-      b.addEventListener('click', () => {
-        if (ui.view === v) return;
-        ui.view = v;
-        try { localStorage.setItem('wcc_view', v); } catch (e) {}
-        render();
-      });
-      wrap.appendChild(b);
-    });
-    return wrap;
-  }
-
   /* ---------- pages ---------- */
 
   function renderGroupStage() {
     appEl.innerHTML = '';
     setActiveTab('group');
-    appEl.appendChild(viewToggle());
-
     const container = el('div', 'schedule');
-    if (ui.view === 'date') renderByDate(container);
-    else renderByGroup(container);
+    renderByDate(container);
     appEl.appendChild(container);
   }
 
@@ -461,27 +441,6 @@
       b.fixtures
         .slice()
         .sort((a, c) => a.instant - c.instant)
-        .forEach((fx) => grid.appendChild(matchCard(fx)));
-      section.appendChild(grid);
-      container.appendChild(section);
-    });
-  }
-
-  function renderByGroup(container) {
-    const byGroup = {};
-    DATA.model.fixtures.forEach((fx) => {
-      const g = (fx.group || '').trim();
-      (byGroup[g] = byGroup[g] || []).push(fx);
-    });
-
-    Object.keys(byGroup).sort().forEach((g) => {
-      const section = el('section', 'day-section');
-      section.appendChild(
-        el('h2', 'section-head', `${esc(t('group_label'))} ${esc(g)}`));
-      const grid = el('div', 'card-grid');
-      byGroup[g]
-        .slice()
-        .sort((a, b) => (a.matchdayNum - b.matchdayNum) || (a.instant - b.instant))
         .forEach((fx) => grid.appendChild(matchCard(fx)));
       section.appendChild(grid);
       container.appendChild(section);
