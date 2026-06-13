@@ -235,9 +235,10 @@
     return 'passed';
   }
 
-  // Reveal button: always "查看 Claude AI 预测方案"; the icon hints upcoming (🔮)
-  // vs already-played/review (📊).
-  function revealButton(bucket, section, settled) {
+  // Reveal button (lives in the date row): always "查看 Claude AI 预测"; the icon
+  // hints upcoming (🔮) vs already-played/review (📊). On click it drops out of
+  // the row and the slip opens just below the date heading.
+  function revealButton(bucket, section, headRow, settled) {
     const btn = el('button', 'parlay-reveal');
     btn.innerHTML =
       `<span class="parlay-reveal-icon" aria-hidden="true">${settled ? '📊' : '🔮'}</span>` +
@@ -245,7 +246,8 @@
     btn.addEventListener('click', () => {
       revealedDays.add(bucket.key);
       const slip = parlayCard(bucket.key, bucket.fixtures);
-      if (slip) section.replaceChild(slip, btn); else btn.remove();
+      btn.remove();
+      if (slip) section.insertBefore(slip, headRow.nextSibling);
     });
     return btn;
   }
@@ -417,23 +419,23 @@
       const isToday = b.key === todayKey;
       const section = el('section', 'day-section' +
         (isToday ? ' is-today' : '') + (b.key === focusKey ? ' is-focus' : ''));
+      // date heading + the "查看 Claude AI 预测" button share one row
+      const headRow = el('div', 'day-head');
       const label = (isToday ? t('today') + ' · ' : '') + I18N.formatDateFull(b.instant);
-      section.appendChild(el('h2', 'section-head', esc(label)));
+      headRow.appendChild(el('h2', 'section-head', esc(label)));
+      section.appendChild(headRow);
 
-      // Parlay visibility (kept low-key):
-      //  · today, still in progress → auto-show (graded live as legs finish)
-      //  · next two upcoming days   → "生成 Claude AI 预测方案" button
-      //  · further-out days         → nothing yet
-      //  · finished / past days     → "查看 Claude AI 预测方案" (review + verdict)
+      // Parlay is always click-to-open (never auto, incl. today). Today/past days
+      // always offer the button; an upcoming day only within the next two days.
       if (PREDICTIONS[b.key] && PREDICTIONS[b.key].groups) {
-        const allDone = b.fixtures.every((fx) => isFinished(fx));
-        if ((isToday && !allDone) || revealedDays.has(b.key)) {
+        if (revealedDays.has(b.key)) {
           const slip = parlayCard(b.key, b.fixtures);
           if (slip) section.appendChild(slip);
         } else if (b.key > todayKey) {
-          if (generatable.has(b.key)) section.appendChild(revealButton(b, section, false));
+          if (generatable.has(b.key)) headRow.appendChild(revealButton(b, section, headRow, false));
         } else {
-          section.appendChild(revealButton(b, section, true)); // today all done, or past
+          const anyDone = b.fixtures.some((fx) => isFinished(fx));
+          headRow.appendChild(revealButton(b, section, headRow, anyDone));
         }
       }
 
