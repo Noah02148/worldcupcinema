@@ -543,43 +543,52 @@
 
   /* ---------- knockout bracket ---------- */
 
-  // Official 2026 bracket. Slot codes: "1A"/"2A" = group winner/runner-up;
-  // "3:C,E,F,H" = a best-third-place slot (constraint groups); "W74"/"L101" =
-  // winner/loser of that match. Rounds render in this order.
+  // Official 2026 bracket + schedule. Slot codes: "1A"/"2A" = group winner/
+  // runner-up; "3:C,E,F,H" = a best-third-place slot (constraint groups);
+  // "W74"/"L101" = winner/loser of that match. date/et/venue follow the 2026
+  // knockout calendar (R32 Jun28–Jul3, R16 Jul4–7, QF Jul9–11, SF Jul14–15,
+  // 3rd Jul18, Final Jul19); et is US-East kickoff like the group stage.
   const BRACKET = [
     { round: 'r32', matches: [
-      { n: 73, a: '2A', b: '2B' },
-      { n: 74, a: '1E', b: '3:A,B,C,D,F' },
-      { n: 75, a: '1F', b: '2C' },
-      { n: 76, a: '1C', b: '2F' },
-      { n: 77, a: '1I', b: '3:C,D,F,G,H' },
-      { n: 78, a: '2E', b: '2I' },
-      { n: 79, a: '1A', b: '3:C,E,F,H,I' },
-      { n: 80, a: '1L', b: '3:E,H,I,J,K' },
-      { n: 81, a: '1D', b: '3:B,E,F,I,J' },
-      { n: 82, a: '1G', b: '3:A,E,H,I,J' },
-      { n: 83, a: '2K', b: '2L' },
-      { n: 84, a: '1H', b: '2J' },
-      { n: 85, a: '1B', b: '3:E,F,G,I,J' },
-      { n: 86, a: '1J', b: '2H' },
-      { n: 87, a: '1K', b: '3:D,E,I,J,L' },
-      { n: 88, a: '2D', b: '2G' },
+      { n: 73, a: '2A', b: '2B', date: '2026-06-28', et: '15:00', venue: 'Los Angeles' },
+      { n: 74, a: '1E', b: '3:A,B,C,D,F', date: '2026-06-28', et: '19:00', venue: 'Boston' },
+      { n: 75, a: '1F', b: '2C', date: '2026-06-29', et: '12:00', venue: 'Mexico City' },
+      { n: 76, a: '1C', b: '2F', date: '2026-06-29', et: '16:00', venue: 'Houston' },
+      { n: 77, a: '1I', b: '3:C,D,F,G,H', date: '2026-06-29', et: '20:00', venue: 'Dallas' },
+      { n: 78, a: '2E', b: '2I', date: '2026-06-30', et: '12:00', venue: 'Seattle' },
+      { n: 79, a: '1A', b: '3:C,E,F,H,I', date: '2026-06-30', et: '16:00', venue: 'Atlanta' },
+      { n: 80, a: '1L', b: '3:E,H,I,J,K', date: '2026-06-30', et: '20:00', venue: 'Vancouver' },
+      { n: 81, a: '1D', b: '3:B,E,F,I,J', date: '2026-07-01', et: '12:00', venue: 'Miami' },
+      { n: 82, a: '1G', b: '3:A,E,H,I,J', date: '2026-07-01', et: '16:00', venue: 'New Jersey' },
+      { n: 83, a: '2K', b: '2L', date: '2026-07-01', et: '20:00', venue: 'Philadelphia' },
+      { n: 84, a: '1H', b: '2J', date: '2026-07-02', et: '12:00', venue: 'Toronto' },
+      { n: 85, a: '1B', b: '3:E,F,G,I,J', date: '2026-07-02', et: '16:00', venue: 'San Francisco' },
+      { n: 86, a: '1J', b: '2H', date: '2026-07-02', et: '20:00', venue: 'Kansas City' },
+      { n: 87, a: '1K', b: '3:D,E,I,J,L', date: '2026-07-03', et: '15:00', venue: 'Monterrey' },
+      { n: 88, a: '2D', b: '2G', date: '2026-07-03', et: '19:00', venue: 'Guadalajara' },
     ] },
     { round: 'r16', matches: [
-      { n: 89, a: 'W74', b: 'W77' }, { n: 90, a: 'W73', b: 'W75' },
-      { n: 91, a: 'W76', b: 'W78' }, { n: 92, a: 'W79', b: 'W80' },
-      { n: 93, a: 'W83', b: 'W84' }, { n: 94, a: 'W81', b: 'W82' },
-      { n: 95, a: 'W86', b: 'W88' }, { n: 96, a: 'W85', b: 'W87' },
+      { n: 89, a: 'W74', b: 'W77', date: '2026-07-04', et: '15:00', venue: 'Philadelphia' },
+      { n: 90, a: 'W73', b: 'W75', date: '2026-07-04', et: '19:00', venue: 'Houston' },
+      { n: 91, a: 'W76', b: 'W78', date: '2026-07-05', et: '15:00', venue: 'Mexico City' },
+      { n: 92, a: 'W79', b: 'W80', date: '2026-07-05', et: '19:00', venue: 'Dallas' },
+      { n: 93, a: 'W83', b: 'W84', date: '2026-07-06', et: '15:00', venue: 'Seattle' },
+      { n: 94, a: 'W81', b: 'W82', date: '2026-07-06', et: '19:00', venue: 'Atlanta' },
+      { n: 95, a: 'W86', b: 'W88', date: '2026-07-07', et: '15:00', venue: 'Boston' },
+      { n: 96, a: 'W85', b: 'W87', date: '2026-07-07', et: '19:00', venue: 'Vancouver' },
     ] },
     { round: 'qf', matches: [
-      { n: 97, a: 'W89', b: 'W90' }, { n: 98, a: 'W93', b: 'W94' },
-      { n: 99, a: 'W91', b: 'W92' }, { n: 100, a: 'W95', b: 'W96' },
+      { n: 97, a: 'W89', b: 'W90', date: '2026-07-09', et: '15:00', venue: 'Boston' },
+      { n: 98, a: 'W93', b: 'W94', date: '2026-07-09', et: '19:00', venue: 'Los Angeles' },
+      { n: 99, a: 'W91', b: 'W92', date: '2026-07-11', et: '15:00', venue: 'Kansas City' },
+      { n: 100, a: 'W95', b: 'W96', date: '2026-07-11', et: '19:00', venue: 'Miami' },
     ] },
     { round: 'sf', matches: [
-      { n: 101, a: 'W97', b: 'W98' }, { n: 102, a: 'W99', b: 'W100' },
+      { n: 101, a: 'W97', b: 'W98', date: '2026-07-14', et: '15:00', venue: 'Dallas' },
+      { n: 102, a: 'W99', b: 'W100', date: '2026-07-15', et: '15:00', venue: 'Atlanta' },
     ] },
-    { round: 'third', matches: [{ n: 103, a: 'L101', b: 'L102' }] },
-    { round: 'final', matches: [{ n: 104, a: 'W101', b: 'W102' }] },
+    { round: 'third', matches: [{ n: 103, a: 'L101', b: 'L102', date: '2026-07-18', et: '15:00', venue: 'Miami' }] },
+    { round: 'final', matches: [{ n: 104, a: 'W101', b: 'W102', date: '2026-07-19', et: '15:00', venue: 'New Jersey' }] },
   ];
 
   function buildKnockoutCtx() {
@@ -641,93 +650,101 @@
     return slot;
   }
 
-  // One compact team row: mini poster (or moon) + flag + name, or a slot label.
-  function bTeam(code, ctx, wl) {
+  // One knockout side as a full team-side card: resolved team -> poster + flag +
+  // name (links to the country); unresolved slot -> moon poster + slot label.
+  function koSide(code, ctx) {
     const id = resolveSlot(code, ctx);
-    const mini = el('span', 'bmini');
-    if (id) {
-      const country = DATA.model.countriesById[id];
-      const row = el('a', 'bteam' + (wl.winner === id ? ' is-winner' : ''));
-      row.href = `#/country/${encodeURIComponent(id)}`;
-      mini.appendChild(posterEl(DATA.filmsList(id)[0] || null));
-      row.appendChild(mini);
-      row.appendChild(el('span', 'bteam-main',
-        `<span class="flag">${esc((country && country.flag) || '')}</span>` +
-        `<span class="cname">${esc(countryName(country) || id)}</span>`));
-      return row;
-    }
+    if (id) return teamSide(DATA.model.countriesById[id], id, 1); // film slot 1
     const lbl = slotLabel(code);
-    const row = el('div', 'bteam');
-    mini.appendChild(moonPoster());
-    row.appendChild(mini);
-    row.appendChild(el('span', 'bteam-main',
+    const side = el('div', 'team-side');
+    side.appendChild(moonPoster());
+    side.appendChild(el('div', 'team-label',
       `<span class="cname slot-code">${esc(lbl.main)}</span>` +
       (lbl.sub ? `<span class="slot-sub">${esc(lbl.sub)}</span>` : '')));
-    return row;
+    return side;
   }
 
-  function bMatch(m, ctx) {
-    const card = el('div', 'bcard');
-    card.appendChild(el('div', 'bcard-no', 'M' + m.n));
-    const wl = resolveWL(m.n, ctx); // for winner highlight
-    card.appendChild(bTeam(m.a, ctx, wl));
-    card.appendChild(bTeam(m.b, ctx, wl));
-    return card;
-  }
+  // A knockout match as a group-stage-style card: round · time · city · status,
+  // then the two sides with the score once it's played.
+  function koMatchCard(m, ctx, roundKey) {
+    const card = el('article', 'match-card');
+    const aId = resolveSlot(m.a, ctx);
+    const bId = resolveSlot(m.b, ctx);
 
-  // Order matches per round so each pair's two feeders are adjacent (visual
-  // bracket order), derived top-down from the final via the W##/L## references.
-  function bracketColumns() {
-    const byNum = {};
-    BRACKET.forEach((rd) => rd.matches.forEach((m) => { byNum[m.n] = m; }));
-    const feeders = (m) => [m.a, m.b]
-      .map((c) => { const x = /^[WL](\d+)$/.exec(c); return x ? +x[1] : null; });
-
-    const cols = [[104]]; // final
-    let cur = [104];
-    for (let i = 0; i < 4; i++) {
-      const next = [];
-      cur.forEach((n) => feeders(byNum[n]).forEach((f) => { if (f) next.push(f); }));
-      if (!next.length) break;
-      cols.unshift(next);
-      cur = next;
+    // status / score (only resolvable once both teams are known)
+    let cls = 'is-pre', label = t('status_pre'), score = null, hasScore = false;
+    if (aId && bId) {
+      const r = DATA.resultForPair(aId, bId);
+      if (r) {
+        const live = r.state === 'in';
+        const done = r.state === 'post' || r.completed;
+        if (live || done) {
+          hasScore = true;
+          const h = r.home != null && r.home !== '' ? r.home : '-';
+          const a = r.away != null && r.away !== '' ? r.away : '-';
+          score = `${esc(h)}<span class="sc-dash">–</span>${esc(a)}`;
+        }
+        if (live) { cls = 'is-live'; label = t('status_live') + (r.detail ? ' · ' + r.detail : ''); }
+        else if (done) { cls = 'is-final'; label = t('status_final'); }
+      }
     }
-    return cols.map((nums) => nums.map((n) => byNum[n])); // [r32, r16, qf, sf, final]
+
+    const meta = el('div', 'match-meta');
+    const city = esc(I18N.cityName(m.venue));
+    meta.innerHTML =
+      `<span class="m-group">${esc(t('ko_' + roundKey))}</span>` +
+      `<span class="m-dot">·</span><span class="m-time">${I18N.formatTime(m.instant)}</span>` +
+      `<span class="m-tz">${esc(t('tz_note'))}</span>` +
+      (city ? `<span class="m-dot">·</span><span class="m-city">${city}</span>` : '') +
+      `<span class="m-status ${cls}">${esc(label)}</span>`;
+    card.appendChild(meta);
+
+    const body = el('div', 'match-body');
+    body.appendChild(koSide(m.a, ctx));
+    const center = el('div', 'vs' + (hasScore ? ' has-score' : ''));
+    center.innerHTML = hasScore ? `<span class="score">${score}</span>` : `<span>${esc(t('vs'))}</span>`;
+    body.appendChild(center);
+    body.appendChild(koSide(m.b, ctx));
+    card.appendChild(body);
+    return card;
   }
 
   function renderKnockout() {
     appEl.innerHTML = '';
     setActiveTab('knockout');
     const ctx = buildKnockoutCtx();
-    const cols = bracketColumns();
-    const keys = ['r32', 'r16', 'qf', 'sf', 'final'];
 
-    const bracket = el('div', 'bracket');
-    cols.forEach((matches, ci) => {
-      const round = el('div', 'bround' +
-        (ci === 0 ? ' is-first' : '') + (ci === cols.length - 1 ? ' is-last' : ''));
-      round.appendChild(el('div', 'bround-title', esc(t('ko_' + keys[ci]))));
-      const cells = el('div', 'bcells');
-      matches.forEach((m) => {
-        const cell = el('div', 'bcell');
-        cell.appendChild(bMatch(m, ctx));
-        cells.appendChild(cell);
-      });
-      round.appendChild(cells);
-      bracket.appendChild(round);
+    const roundByNum = {};
+    const items = [];
+    BRACKET.forEach((rd) => rd.matches.forEach((m) => {
+      roundByNum[m.n] = rd.round;
+      items.push(Object.assign({ instant: I18N.fixtureInstant(m.date, m.et) }, m));
+    }));
+
+    // bucket by Beijing date, exactly like the group stage
+    const buckets = new Map();
+    items.forEach((m) => {
+      const key = I18N.dateKey(m.instant);
+      if (!buckets.has(key)) buckets.set(key, { key, instant: m.instant, matches: [] });
+      buckets.get(key).matches.push(m);
     });
-    appEl.appendChild(bracket);
 
-    // third-place match sits off the main tree
-    const third = (BRACKET.find((r) => r.round === 'third') || {}).matches[0];
-    if (third) {
-      const tp = el('div', 'third-place');
-      tp.appendChild(el('h2', 'section-head', esc(t('ko_third'))));
-      const cell = el('div', 'bcell');
-      cell.appendChild(bMatch(third, ctx));
-      tp.appendChild(cell);
-      appEl.appendChild(tp);
-    }
+    const container = el('div', 'schedule');
+    [...buckets.values()]
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .forEach((bk) => {
+        const section = el('section', 'day-section');
+        const headRow = el('div', 'day-head');
+        headRow.appendChild(el('h2', 'section-head', esc(I18N.formatDateFull(bk.instant))));
+        section.appendChild(headRow);
+        const grid = el('div', 'card-grid');
+        bk.matches
+          .sort((a, b) => a.instant - b.instant)
+          .forEach((m) => grid.appendChild(koMatchCard(m, ctx, roundByNum[m.n])));
+        section.appendChild(grid);
+        container.appendChild(section);
+      });
+    appEl.appendChild(container);
   }
 
   function renderCountry(countryId) {
