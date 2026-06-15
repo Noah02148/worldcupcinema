@@ -200,181 +200,10 @@
     return side;
   }
 
-  /* ---------- Claude Fable 5 parlay picks ---------- */
-
-  const PREDICTIONS = window.PREDICTIONS || {};
-  const revealedDays = new Set(); // future days the user clicked to reveal
-
-  // Final outcome of a match for grading: winning country_id, 'DRAW', or null
-  // when it isn't a completed result yet.
-  function matchFinal(fx) {
+  // Whether a match has a final result (used to pick the "今日比赛" jump target).
+  function isFinished(fx) {
     const r = DATA.resultForFixture(fx);
-    if (!r || !(r.completed || r.state === 'post')) return null;
-    const h = Number(r.home), a = Number(r.away);
-    if (Number.isNaN(h) || Number.isNaN(a)) return null;
-    if (h > a) return (fx.home_id || '').trim();
-    if (a > h) return (fx.away_id || '').trim();
-    return 'DRAW';
-  }
-
-  // Whether a match has a final result at all (any leg decided).
-  function isFinished(fx) { return matchFinal(fx) != null; }
-
-  // A ticket's standing: 'passed' (all legs hit), 'failed' (a leg missed), or
-  // 'pending' (still undecided legs, none missed yet).
-  function ticketStatus(ticket, fxById) {
-    const ids = Object.keys(ticket.picks).filter((mid) => fxById[mid]);
-    let anyMiss = false, anyPending = false;
-    ids.forEach((mid) => {
-      const out = matchFinal(fxById[mid]);
-      if (out == null) anyPending = true;
-      else if (out !== ticket.picks[mid]) anyMiss = true;
-    });
-    if (anyMiss) return 'failed';
-    if (anyPending) return 'pending';
-    return 'passed';
-  }
-
-  // Reveal button (lives in the date row): always "查看 Claude AI 预测"; the icon
-  // hints upcoming (🔮) vs already-played/review (📊). On click it drops out of
-  // the row and the slip opens just below the date heading.
-  function revealButton(bucket, section, headRow, settled) {
-    const btn = el('button', 'parlay-reveal');
-    btn.innerHTML =
-      `<span class="parlay-reveal-icon" aria-hidden="true">${settled ? '📊' : '🔮'}</span>` +
-      `<span>${esc(t('view_parlay'))}</span>`;
-    btn.addEventListener('click', () => {
-      revealedDays.add(bucket.key);
-      const slip = parlayCard(bucket.key, bucket.fixtures);
-      btn.remove();
-      if (slip) section.insertBefore(slip, headRow.nextSibling);
-    });
-    return btn;
-  }
-
-  // One side: flag + name. `dim` faintens the loser/opponent in a win row.
-  const teamHTML = (c, id, dim) =>
-    `<span class="flag">${esc((c && c.flag) || '')}</span>` +
-    `<span class="cname${dim ? ' is-opp' : ''}">${esc(countryName(c) || id)}</span>`;
-
-  // Pick badge with grading: 胜/平, plus ✓/✗ and hit/miss colour once final.
-  function pickBadge(fx, pick) {
-    const label = pick === 'DRAW' ? t('pick_draw') : t('pick_win');
-    const out = matchFinal(fx);
-    let cls = 'parlay-pick' + (pick === 'DRAW' ? ' is-draw' : '');
-    let mark = '';
-    if (out != null) {
-      if (out === pick) { cls += ' is-hit'; mark = ' ✓'; }
-      else { cls += ' is-miss'; mark = ' ✗'; }
-    }
-    return `<span class="${cls}">${esc(label)}${esc(mark)}</span>`;
-  }
-
-  // One pick row: winner VS opponent + 胜, or both teams + 平 for a draw. Both
-  // sides always show a flag.
-  function pickRow(fx, pick) {
-    const home = DATA.model.countriesById[(fx.home_id || '').trim()];
-    const away = DATA.model.countriesById[(fx.away_id || '').trim()];
-    const row = el('div', 'parlay-row');
-
-    if (pick === 'DRAW') {
-      row.innerHTML =
-        `<span class="parlay-team">` +
-          teamHTML(home, fx.home_id) +
-          `<span class="parlay-vs">${esc(t('vs'))}</span>` +
-          teamHTML(away, fx.away_id) +
-        `</span>` + pickBadge(fx, pick);
-    } else {
-      const win = DATA.model.countriesById[pick];
-      const oppId = pick === (fx.home_id || '').trim() ? fx.away_id : fx.home_id;
-      const opp = DATA.model.countriesById[(oppId || '').trim()];
-      row.innerHTML =
-        `<span class="parlay-team">` +
-          teamHTML(win, pick) +
-          `<span class="parlay-vs">${esc(t('vs'))}</span>` +
-          teamHTML(opp, oppId, true) +
-        `</span>` + pickBadge(fx, pick);
-    }
-    return row;
-  }
-
-  // One ticket: label + stake% + N串1, then its pick rows. Each ticket is
-  // capped at 3 legs by the data (4-match days are split into two 2串1).
-  function ticketEl(ticket, fxById) {
-    if (!ticket || !ticket.picks) return null;
-    const ids = Object.keys(ticket.picks).filter((mid) => fxById[mid]);
-    if (!ids.length) return null;
-    ids.sort((a, b) => fxById[a].instant - fxById[b].instant);
-
-    const tk = el('div', 'parlay-ticket' + (ticket.dim ? ' is-alt' : ''));
-    const head = el('div', 'ticket-head');
-    head.innerHTML =
-      `<span class="ticket-label">${esc(t(ticket.label || 'parlay_main'))}</span>` +
-      (ticket.stake != null ? `<span class="ticket-stake">${esc(ticket.stake)}%</span>` : '') +
-      (ids.length > 1 ? `<span class="ticket-combo">${esc(ids.length)}${esc(t('parlay_combo'))}</span>` : '');
-    tk.appendChild(head);
-
-    const list = el('div', 'parlay-list');
-    ids.forEach((mid) => list.appendChild(pickRow(fxById[mid], ticket.picks[mid])));
-    tk.appendChild(list);
-    return tk;
-  }
-
-  // Group verdict from its main/hedge tickets: 'main' (主推过关成功),
-  // 'alt' (副推过关成功), 'fail' (过关失败), or null while still pending.
-  function groupVerdict(grp, fxById) {
-    const main = (grp.tickets || []).find((tk) => tk.label === 'parlay_main');
-    const alt = (grp.tickets || []).find((tk) => tk.label === 'parlay_alt');
-    if (main && ticketStatus(main, fxById) === 'passed') return 'main';
-    if (alt && ticketStatus(alt, fxById) === 'passed') return 'alt';
-    const decided = (tk) => !tk || ticketStatus(tk, fxById) === 'failed';
-    return decided(main) && decided(alt) ? 'fail' : null;
-  }
-
-  // The day's parlay slip, keyed by the Beijing date the day section uses. Each
-  // group offers main+hedge alternatives over a subset of matches; with 2+
-  // groups the user mixes one ticket per group (e.g. their own 四串一). Once
-  // results land, each group shows a 主推/副推过关成功 or 过关失败 verdict.
-  function parlayCard(dateKey, fixtures) {
-    const day = PREDICTIONS[dateKey];
-    if (!day || !day.groups) return null;
-    const fxById = {};
-    fixtures.forEach((fx) => { fxById[(fx.match_id || '').trim()] = fx; });
-
-    const groups = day.groups
-      .map((grp) => ({ tickets: (grp.tickets || []).map((tk) => ticketEl(tk, fxById)).filter(Boolean),
-                       verdict: groupVerdict(grp, fxById) }))
-      .filter((g) => g.tickets.length);
-    if (!groups.length) return null;
-    const multi = groups.length > 1;
-
-    const card = el('section', 'parlay');
-    const head = el('div', 'parlay-head',
-      `<span class="parlay-mark" aria-hidden="true">🎟</span>` +
-      `<span class="parlay-title">${esc(t('parlay_title'))}</span>` +
-      `<button class="parlay-info" type="button" aria-label="${esc(t('parlay_info'))}">?</button>` +
-      `<span class="parlay-tip" role="tooltip" hidden>${esc(t('parlay_info'))}</span>`);
-    const info = head.querySelector('.parlay-info');
-    const tip = head.querySelector('.parlay-tip');
-    info.addEventListener('click', (e) => {
-      e.stopPropagation();
-      tip.hidden = !tip.hidden;
-    });
-    card.appendChild(head);
-
-    groups.forEach((grp, gi) => {
-      const g = el('div', 'parlay-group');
-      if (multi) g.appendChild(el('div', 'parlay-group-head',
-        `<span class="parlay-group-label">${esc(t('parlay_group', { n: gi + 1 }))}</span>`));
-      grp.tickets.forEach((tk) => g.appendChild(tk));
-      // verdict sits at the bottom of the group: 预测结果：主推过关成功
-      if (grp.verdict) g.appendChild(el('div', 'parlay-result',
-        `<span class="parlay-result-label">${esc(t('verdict_label'))}</span>` +
-        `<span class="parlay-verdict is-${grp.verdict}">${esc(t('verdict_' + grp.verdict))}</span>`));
-      card.appendChild(g);
-    });
-    if (multi) card.appendChild(el('div', 'parlay-hint', esc(t('parlay_combine_hint'))));
-    return card;
+    return !!(r && (r.completed || r.state === 'post'));
   }
 
   /* ---------- pages ---------- */
@@ -411,33 +240,14 @@
     const focus = all.find((b) => b.key >= todayKey && b.fixtures.some((fx) => !isFinished(fx)));
     const focusKey = focus ? focus.key : todayKey;
 
-    // Only the next two day-sections get a "生成" button (keeps it from looking
-    // like a betting site; days further out stay hidden until they're closer).
-    const generatable = new Set(all.filter((b) => b.key > todayKey).slice(0, 2).map((b) => b.key));
-
     all.forEach((b) => {
       const isToday = b.key === todayKey;
       const section = el('section', 'day-section' +
         (isToday ? ' is-today' : '') + (b.key === focusKey ? ' is-focus' : ''));
-      // date heading + the "查看 Claude AI 预测" button share one row
       const headRow = el('div', 'day-head');
       const label = (isToday ? t('today') + ' · ' : '') + I18N.formatDateFull(b.instant);
       headRow.appendChild(el('h2', 'section-head', esc(label)));
       section.appendChild(headRow);
-
-      // Parlay is always click-to-open (never auto, incl. today). Today/past days
-      // always offer the button; an upcoming day only within the next two days.
-      if (PREDICTIONS[b.key] && PREDICTIONS[b.key].groups) {
-        if (revealedDays.has(b.key)) {
-          const slip = parlayCard(b.key, b.fixtures);
-          if (slip) section.appendChild(slip);
-        } else if (b.key > todayKey) {
-          if (generatable.has(b.key)) headRow.appendChild(revealButton(b, section, headRow, false));
-        } else {
-          const anyDone = b.fixtures.some((fx) => isFinished(fx));
-          headRow.appendChild(revealButton(b, section, headRow, anyDone));
-        }
-      }
 
       const grid = el('div', 'card-grid');
       b.fixtures
@@ -928,12 +738,6 @@
       e.preventDefault();
       const sec = document.getElementById('contact');
       if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
-    // Close any open parlay info tooltip when clicking elsewhere. (The icon's
-    // own handler stops propagation, so its toggles aren't undone here.)
-    document.addEventListener('click', () => {
-      document.querySelectorAll('.parlay-tip:not([hidden])').forEach((tip) => { tip.hidden = true; });
     });
 
     // Today's matches: jump to the pinned "today" section. That block only
