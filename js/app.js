@@ -206,6 +206,12 @@
     return !!(r && (r.completed || r.state === 'post'));
   }
 
+  // All 72 group-stage fixtures played — the home view then defaults to knockout.
+  function groupStageOver() {
+    const fx = DATA.model.fixtures;
+    return fx.length > 0 && fx.every(isFinished);
+  }
+
   /* ---------- pages ---------- */
 
   function renderGroupStage() {
@@ -355,49 +361,50 @@
 
   // Official 2026 bracket + schedule. Slot codes: "1A"/"2A" = group winner/
   // runner-up; "3:C,E,F,H" = a best-third-place slot (constraint groups);
-  // "W74"/"L101" = winner/loser of that match. date/et/venue follow the 2026
-  // knockout calendar (R32 Jun28–Jul3, R16 Jul4–7, QF Jul9–11, SF Jul14–15,
-  // 3rd Jul18, Final Jul19); et is US-East kickoff like the group stage.
+  // "W74"/"L101" = winner/loser of that match. date/venue and `et` (US-Eastern
+  // kickoff, EDT, like the group stage) are from the official 2026 schedule
+  // (en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage); Wikipedia's
+  // venue-local times were converted to ET (Central +1, Mexico +2, Pacific +3).
   const BRACKET = [
     { round: 'r32', matches: [
       { n: 73, a: '2A', b: '2B', date: '2026-06-28', et: '15:00', venue: 'Los Angeles' },
-      { n: 74, a: '1E', b: '3:A,B,C,D,F', date: '2026-06-28', et: '19:00', venue: 'Boston' },
-      { n: 75, a: '1F', b: '2C', date: '2026-06-29', et: '12:00', venue: 'Mexico City' },
-      { n: 76, a: '1C', b: '2F', date: '2026-06-29', et: '16:00', venue: 'Houston' },
-      { n: 77, a: '1I', b: '3:C,D,F,G,H', date: '2026-06-29', et: '20:00', venue: 'Dallas' },
-      { n: 78, a: '2E', b: '2I', date: '2026-06-30', et: '12:00', venue: 'Seattle' },
-      { n: 79, a: '1A', b: '3:C,E,F,H,I', date: '2026-06-30', et: '16:00', venue: 'Atlanta' },
-      { n: 80, a: '1L', b: '3:E,H,I,J,K', date: '2026-06-30', et: '20:00', venue: 'Vancouver' },
-      { n: 81, a: '1D', b: '3:B,E,F,I,J', date: '2026-07-01', et: '12:00', venue: 'Miami' },
-      { n: 82, a: '1G', b: '3:A,E,H,I,J', date: '2026-07-01', et: '16:00', venue: 'New Jersey' },
-      { n: 83, a: '2K', b: '2L', date: '2026-07-01', et: '20:00', venue: 'Philadelphia' },
-      { n: 84, a: '1H', b: '2J', date: '2026-07-02', et: '12:00', venue: 'Toronto' },
-      { n: 85, a: '1B', b: '3:E,F,G,I,J', date: '2026-07-02', et: '16:00', venue: 'San Francisco' },
-      { n: 86, a: '1J', b: '2H', date: '2026-07-02', et: '20:00', venue: 'Kansas City' },
-      { n: 87, a: '1K', b: '3:D,E,I,J,L', date: '2026-07-03', et: '15:00', venue: 'Monterrey' },
-      { n: 88, a: '2D', b: '2G', date: '2026-07-03', et: '19:00', venue: 'Guadalajara' },
+      { n: 74, a: '1E', b: '3:A,B,C,D,F', date: '2026-06-29', et: '16:30', venue: 'Boston' },
+      { n: 75, a: '1F', b: '2C', date: '2026-06-29', et: '21:00', venue: 'Monterrey' },
+      { n: 76, a: '1C', b: '2F', date: '2026-06-29', et: '13:00', venue: 'Houston' },
+      { n: 77, a: '1I', b: '3:C,D,F,G,H', date: '2026-06-30', et: '17:00', venue: 'New Jersey' },
+      { n: 78, a: '2E', b: '2I', date: '2026-06-30', et: '13:00', venue: 'Dallas' },
+      { n: 79, a: '1A', b: '3:C,E,F,H,I', date: '2026-06-30', et: '21:00', venue: 'Mexico City' },
+      { n: 80, a: '1L', b: '3:E,H,I,J,K', date: '2026-07-01', et: '12:00', venue: 'Atlanta' },
+      { n: 81, a: '1D', b: '3:B,E,F,I,J', date: '2026-07-01', et: '20:00', venue: 'San Francisco' },
+      { n: 82, a: '1G', b: '3:A,E,H,I,J', date: '2026-07-01', et: '16:00', venue: 'Seattle' },
+      { n: 83, a: '2K', b: '2L', date: '2026-07-02', et: '19:00', venue: 'Toronto' },
+      { n: 84, a: '1H', b: '2J', date: '2026-07-02', et: '15:00', venue: 'Los Angeles' },
+      { n: 85, a: '1B', b: '3:E,F,G,I,J', date: '2026-07-02', et: '23:00', venue: 'Vancouver' },
+      { n: 86, a: '1J', b: '2H', date: '2026-07-03', et: '18:00', venue: 'Miami' },
+      { n: 87, a: '1K', b: '3:D,E,I,J,L', date: '2026-07-03', et: '21:30', venue: 'Kansas City' },
+      { n: 88, a: '2D', b: '2G', date: '2026-07-03', et: '14:00', venue: 'Dallas' },
     ] },
     { round: 'r16', matches: [
-      { n: 89, a: 'W74', b: 'W77', date: '2026-07-04', et: '15:00', venue: 'Philadelphia' },
-      { n: 90, a: 'W73', b: 'W75', date: '2026-07-04', et: '19:00', venue: 'Houston' },
-      { n: 91, a: 'W76', b: 'W78', date: '2026-07-05', et: '15:00', venue: 'Mexico City' },
-      { n: 92, a: 'W79', b: 'W80', date: '2026-07-05', et: '19:00', venue: 'Dallas' },
-      { n: 93, a: 'W83', b: 'W84', date: '2026-07-06', et: '15:00', venue: 'Seattle' },
-      { n: 94, a: 'W81', b: 'W82', date: '2026-07-06', et: '19:00', venue: 'Atlanta' },
-      { n: 95, a: 'W86', b: 'W88', date: '2026-07-07', et: '15:00', venue: 'Boston' },
-      { n: 96, a: 'W85', b: 'W87', date: '2026-07-07', et: '19:00', venue: 'Vancouver' },
+      { n: 89, a: 'W74', b: 'W77', date: '2026-07-04', et: '17:00', venue: 'Philadelphia' },
+      { n: 90, a: 'W73', b: 'W75', date: '2026-07-04', et: '13:00', venue: 'Houston' },
+      { n: 91, a: 'W76', b: 'W78', date: '2026-07-05', et: '16:00', venue: 'New Jersey' },
+      { n: 92, a: 'W79', b: 'W80', date: '2026-07-05', et: '20:00', venue: 'Mexico City' },
+      { n: 93, a: 'W83', b: 'W84', date: '2026-07-06', et: '15:00', venue: 'Dallas' },
+      { n: 94, a: 'W81', b: 'W82', date: '2026-07-06', et: '20:00', venue: 'Seattle' },
+      { n: 95, a: 'W86', b: 'W88', date: '2026-07-07', et: '12:00', venue: 'Atlanta' },
+      { n: 96, a: 'W85', b: 'W87', date: '2026-07-07', et: '16:00', venue: 'Vancouver' },
     ] },
     { round: 'qf', matches: [
-      { n: 97, a: 'W89', b: 'W90', date: '2026-07-09', et: '15:00', venue: 'Boston' },
-      { n: 98, a: 'W93', b: 'W94', date: '2026-07-09', et: '19:00', venue: 'Los Angeles' },
-      { n: 99, a: 'W91', b: 'W92', date: '2026-07-11', et: '15:00', venue: 'Kansas City' },
-      { n: 100, a: 'W95', b: 'W96', date: '2026-07-11', et: '19:00', venue: 'Miami' },
+      { n: 97, a: 'W89', b: 'W90', date: '2026-07-09', et: '16:00', venue: 'Boston' },
+      { n: 98, a: 'W93', b: 'W94', date: '2026-07-10', et: '15:00', venue: 'Los Angeles' },
+      { n: 99, a: 'W91', b: 'W92', date: '2026-07-11', et: '17:00', venue: 'Miami' },
+      { n: 100, a: 'W95', b: 'W96', date: '2026-07-11', et: '21:00', venue: 'Kansas City' },
     ] },
     { round: 'sf', matches: [
       { n: 101, a: 'W97', b: 'W98', date: '2026-07-14', et: '15:00', venue: 'Dallas' },
       { n: 102, a: 'W99', b: 'W100', date: '2026-07-15', et: '15:00', venue: 'Atlanta' },
     ] },
-    { round: 'third', matches: [{ n: 103, a: 'L101', b: 'L102', date: '2026-07-18', et: '15:00', venue: 'Miami' }] },
+    { round: 'third', matches: [{ n: 103, a: 'L101', b: 'L102', date: '2026-07-18', et: '17:00', venue: 'Miami' }] },
     { round: 'final', matches: [{ n: 104, a: 'W101', b: 'W102', date: '2026-07-19', et: '15:00', venue: 'New Jersey' }] },
   ];
 
@@ -557,6 +564,97 @@
     appEl.appendChild(container);
   }
 
+  /* ---------- 晋级图: connected bracket tree ---------- */
+
+  // One compact team row: mini poster (or moon) + flag + name, or a slot label.
+  function bTeam(code, ctx, wl) {
+    const id = resolveSlot(code, ctx);
+    const mini = el('span', 'bmini');
+    if (id) {
+      const country = DATA.model.countriesById[id];
+      const row = el('a', 'bteam' + (wl.winner === id ? ' is-winner' : ''));
+      row.href = `#/country/${encodeURIComponent(id)}`;
+      mini.appendChild(posterEl(DATA.filmsList(id)[0] || null));
+      row.appendChild(mini);
+      row.appendChild(el('span', 'bteam-main',
+        `<span class="flag">${esc((country && country.flag) || '')}</span>` +
+        `<span class="cname">${esc(countryName(country) || id)}</span>`));
+      return row;
+    }
+    const lbl = slotLabel(code);
+    const row = el('div', 'bteam');
+    mini.appendChild(moonPoster());
+    row.appendChild(mini);
+    row.appendChild(el('span', 'bteam-main',
+      `<span class="cname slot-code">${esc(lbl.main)}</span>` +
+      (lbl.sub ? `<span class="slot-sub">${esc(lbl.sub)}</span>` : '')));
+    return row;
+  }
+
+  function bMatch(m, ctx) {
+    const card = el('div', 'bcard');
+    card.appendChild(el('div', 'bcard-no', 'M' + m.n));
+    const wl = resolveWL(m.n, ctx); // for winner highlight
+    card.appendChild(bTeam(m.a, ctx, wl));
+    card.appendChild(bTeam(m.b, ctx, wl));
+    return card;
+  }
+
+  // Order matches per round so each pair's two feeders are adjacent (visual
+  // bracket order), derived top-down from the final via the W##/L## references.
+  function bracketColumns() {
+    const byNum = {};
+    BRACKET.forEach((rd) => rd.matches.forEach((m) => { byNum[m.n] = m; }));
+    const feeders = (m) => [m.a, m.b]
+      .map((c) => { const x = /^[WL](\d+)$/.exec(c); return x ? +x[1] : null; });
+
+    const cols = [[104]]; // final
+    let cur = [104];
+    for (let i = 0; i < 4; i++) {
+      const next = [];
+      cur.forEach((n) => feeders(byNum[n]).forEach((f) => { if (f) next.push(f); }));
+      if (!next.length) break;
+      cols.unshift(next);
+      cur = next;
+    }
+    return cols.map((nums) => nums.map((n) => byNum[n])); // [r32, r16, qf, sf, final]
+  }
+
+  function renderBracket() {
+    appEl.innerHTML = '';
+    setActiveTab('bracket');
+    const ctx = buildKnockoutCtx();
+    const cols = bracketColumns();
+    const keys = ['r32', 'r16', 'qf', 'sf', 'final'];
+
+    const bracket = el('div', 'bracket');
+    cols.forEach((matches, ci) => {
+      const round = el('div', 'bround' +
+        (ci === 0 ? ' is-first' : '') + (ci === cols.length - 1 ? ' is-last' : ''));
+      round.appendChild(el('div', 'bround-title', esc(t('ko_' + keys[ci]))));
+      const cells = el('div', 'bcells');
+      matches.forEach((m) => {
+        const cell = el('div', 'bcell');
+        cell.appendChild(bMatch(m, ctx));
+        cells.appendChild(cell);
+      });
+      round.appendChild(cells);
+      bracket.appendChild(round);
+    });
+    appEl.appendChild(bracket);
+
+    // third-place match sits off the main tree
+    const third = (BRACKET.find((r) => r.round === 'third') || {}).matches[0];
+    if (third) {
+      const tp = el('div', 'third-place');
+      tp.appendChild(el('h2', 'section-head', esc(t('ko_third'))));
+      const cell = el('div', 'bcell');
+      cell.appendChild(bMatch(third, ctx));
+      tp.appendChild(cell);
+      appEl.appendChild(tp);
+    }
+  }
+
   function renderCountry(countryId) {
     appEl.innerHTML = '';
     setActiveTab('group');
@@ -706,7 +804,12 @@
     const m = hash.match(/^#\/country\/(.+)$/);
     if (m) return renderCountry(m[1]);
     if (hash.startsWith('#/standings')) return renderStandings();
+    if (hash.startsWith('#/bracket')) return renderBracket();
     if (hash.startsWith('#/knockout')) return renderKnockout();
+    if (hash.startsWith('#/group')) return renderGroupStage();
+    // Home: once every group match is played, the default landing is the
+    // knockout schedule; the 小组赛 tab (#/group) still opens the group stage.
+    if (groupStageOver()) return renderKnockout();
     return renderGroupStage();
   }
 

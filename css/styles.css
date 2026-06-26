@@ -726,32 +726,36 @@ a.bteam:hover .cname { color: var(--green); }
 }
 
 @media (max-width: 560px) {
-  /* deterministic 2x2 header so the layout is identical in zh and en */
+  /* header stacks: brand/lang, then the 4 tabs in a 2×2 grid, then nav buttons */
   .header-inner {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto;
     grid-template-areas:
-      "brand   brand   lang"
-      "tabs    today   contact";
-    gap: 10px 6px;
+      "brand   lang"
+      "tabs    tabs"
+      "today   contact";
+    gap: 10px 8px;
     padding: 10px 12px;
     align-items: center;
   }
   .brand { grid-area: brand; }
   .lang-switch { grid-area: lang; justify-self: end; }
-  .tabs { grid-area: tabs; margin-left: 0; gap: 4px; }
-  .tab { padding: 6px 9px; font-size: 13px; }
-  /* 今日比赛 + 影片投稿 share the second row, like the single nav row on desktop.
-     Drop their icons here so all three pill groups fit on one line. */
+  .tabs {
+    grid-area: tabs;
+    margin-left: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .tab { padding: 7px 9px; font-size: 13px; text-align: center; }
   .today-nav {
     grid-area: today;
-    justify-self: end;
+    justify-self: start;
     margin-left: 0;
-    padding: 6px 10px;
-    font-size: 12px;
+    padding: 6px 12px;
+    font-size: 13px;
   }
-  .contact-nav { grid-area: contact; justify-self: end; margin-left: 0; padding: 6px 10px; font-size: 12px; }
-  .today-icon, .contact-icon { display: none; }
+  .contact-nav { grid-area: contact; justify-self: end; margin-left: 0; padding: 6px 12px; font-size: 13px; }
   .brand-name { font-size: 15px; }
   .app { padding: 18px 14px 48px; }
   .card-grid { grid-template-columns: 1fr; }

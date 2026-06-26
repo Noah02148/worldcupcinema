@@ -14,6 +14,7 @@
     tab_group_stage: { zh: '小组赛',       en: 'Group Stage' },
     tab_knockout:    { zh: '淘汰赛',       en: 'Knockout' },
     tab_standings:   { zh: '积分榜',       en: 'Standings' },
+    tab_bracket:     { zh: '晋级图',       en: 'Bracket' },
     st_team:         { zh: '球队',         en: 'Team' },
     st_p:            { zh: '场',           en: 'P' },
     st_w:            { zh: '胜',           en: 'W' },
