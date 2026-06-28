@@ -359,29 +359,32 @@
 
   /* ---------- knockout bracket ---------- */
 
-  // Official 2026 bracket + schedule. Slot codes: "1A"/"2A" = group winner/
-  // runner-up; "3:C,E,F,H" = a best-third-place slot (constraint groups);
-  // "W74"/"L101" = winner/loser of that match. date/venue and `et` (US-Eastern
+  // Official 2026 bracket + schedule. Slot codes: "1A"/"2A"/"3D" = group winner/
+  // runner-up/third; "W74"/"L101" = winner/loser of that match. The eight third
+  // slots use the official best-third allocation for THIS tournament's qualifying
+  // combination (thirds from B,D,E,F,I,J,K,L → en.wikipedia.org/wiki/2026_FIFA_
+  // World_Cup_knockout_stage): 1A-3E,1B-3J,1D-3B,1E-3D,1G-3I,1I-3F,1K-3L,1L-3K.
+  // date/venue and `et` (US-Eastern
   // kickoff, EDT, like the group stage) are from the official 2026 schedule
   // (en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage); Wikipedia's
   // venue-local times were converted to ET (Central +1, Mexico +2, Pacific +3).
   const BRACKET = [
     { round: 'r32', matches: [
       { n: 73, a: '2A', b: '2B', date: '2026-06-28', et: '15:00', venue: 'Los Angeles' },
-      { n: 74, a: '1E', b: '3:A,B,C,D,F', date: '2026-06-29', et: '16:30', venue: 'Boston' },
+      { n: 74, a: '1E', b: '3D', date: '2026-06-29', et: '16:30', venue: 'Boston' },
       { n: 75, a: '1F', b: '2C', date: '2026-06-29', et: '21:00', venue: 'Monterrey' },
       { n: 76, a: '1C', b: '2F', date: '2026-06-29', et: '13:00', venue: 'Houston' },
-      { n: 77, a: '1I', b: '3:C,D,F,G,H', date: '2026-06-30', et: '17:00', venue: 'New Jersey' },
+      { n: 77, a: '1I', b: '3F', date: '2026-06-30', et: '17:00', venue: 'New Jersey' },
       { n: 78, a: '2E', b: '2I', date: '2026-06-30', et: '13:00', venue: 'Dallas' },
-      { n: 79, a: '1A', b: '3:C,E,F,H,I', date: '2026-06-30', et: '21:00', venue: 'Mexico City' },
-      { n: 80, a: '1L', b: '3:E,H,I,J,K', date: '2026-07-01', et: '12:00', venue: 'Atlanta' },
-      { n: 81, a: '1D', b: '3:B,E,F,I,J', date: '2026-07-01', et: '20:00', venue: 'San Francisco' },
-      { n: 82, a: '1G', b: '3:A,E,H,I,J', date: '2026-07-01', et: '16:00', venue: 'Seattle' },
+      { n: 79, a: '1A', b: '3E', date: '2026-06-30', et: '21:00', venue: 'Mexico City' },
+      { n: 80, a: '1L', b: '3K', date: '2026-07-01', et: '12:00', venue: 'Atlanta' },
+      { n: 81, a: '1D', b: '3B', date: '2026-07-01', et: '20:00', venue: 'San Francisco' },
+      { n: 82, a: '1G', b: '3I', date: '2026-07-01', et: '16:00', venue: 'Seattle' },
       { n: 83, a: '2K', b: '2L', date: '2026-07-02', et: '19:00', venue: 'Toronto' },
       { n: 84, a: '1H', b: '2J', date: '2026-07-02', et: '15:00', venue: 'Los Angeles' },
-      { n: 85, a: '1B', b: '3:E,F,G,I,J', date: '2026-07-02', et: '23:00', venue: 'Vancouver' },
+      { n: 85, a: '1B', b: '3J', date: '2026-07-02', et: '23:00', venue: 'Vancouver' },
       { n: 86, a: '1J', b: '2H', date: '2026-07-03', et: '18:00', venue: 'Miami' },
-      { n: 87, a: '1K', b: '3:D,E,I,J,L', date: '2026-07-03', et: '21:30', venue: 'Kansas City' },
+      { n: 87, a: '1K', b: '3L', date: '2026-07-03', et: '21:30', venue: 'Kansas City' },
       { n: 88, a: '2D', b: '2G', date: '2026-07-03', et: '14:00', venue: 'Dallas' },
     ] },
     { round: 'r16', matches: [
@@ -424,15 +427,15 @@
 
   // country_id for a slot, or null if not yet determined.
   function resolveSlot(code, ctx) {
-    if (/^[12][A-L]$/.test(code)) {
+    if (/^[123][A-L]$/.test(code)) {
       const g = code[1];
       if (!ctx.groupComplete[g]) return null;
-      const rec = (ctx.standings[g] || [])[code[0] === '1' ? 0 : 1];
+      const rec = (ctx.standings[g] || [])[+code[0] - 1]; // 1->winner, 2->runner, 3->third
       return rec ? (rec.country.country_id || '').trim() : null;
     }
     if (code.charAt(0) === 'W') return resolveWL(+code.slice(1), ctx).winner;
     if (code.charAt(0) === 'L') return resolveWL(+code.slice(1), ctx).loser;
-    return null; // best-third-place slot "3:..."
+    return null; // unresolved best-third placeholder "3:..." (pre-allocation)
   }
 
   function resolveWL(n, ctx) {
@@ -457,6 +460,7 @@
 
   function slotLabel(code) {
     if (/^[12][A-L]$/.test(code)) return { main: code[1] + code[0] };          // 1A -> A1
+    if (/^3[A-L]$/.test(code)) return { main: t('ko_third_slot'), sub: code[1] }; // 3D -> 第三名 D
     if (code.charAt(0) === '3') return { main: t('ko_third_slot'), sub: code.slice(2).split(',').join('/') };
     return { main: code };                                                      // W74 / L101
   }
