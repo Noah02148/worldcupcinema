@@ -51,6 +51,7 @@
     status_pre:      { zh: '未开始',       en: 'Upcoming' },
     status_live:     { zh: '进行中',       en: 'Live' },
     status_final:    { zh: '完场',         en: 'Full-time' },
+    pens:            { zh: '点球',         en: 'Pens' },
     today:           { zh: '今日',         en: 'Today' },
     today_matches:   { zh: '今日比赛',     en: "Today's matches" },
     completed_heading: { zh: '已完赛',     en: 'Completed' },

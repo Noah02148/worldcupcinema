@@ -473,9 +473,13 @@
 
   // One knockout side as a full team-side card: resolved team -> poster + flag +
   // name (links to the country); unresolved slot -> moon poster + slot label.
-  function koSide(code, ctx) {
+  function koSide(code, ctx, winnerId) {
     const id = resolveSlot(code, ctx);
-    if (id) return teamSide(DATA.model.countriesById[id], id, 1); // film slot 1
+    if (id) {
+      const side = teamSide(DATA.model.countriesById[id], id, 1); // film slot 1
+      if (winnerId && id === winnerId) side.classList.add('is-winner');
+      return side;
+    }
     const lbl = slotLabel(code);
     const side = el('div', 'team-side');
     side.appendChild(moonPoster());
@@ -494,6 +498,7 @@
 
     // status / score (only resolvable once both teams are known)
     let cls = 'is-pre', label = t('status_pre'), score = null, hasScore = false;
+    let pensHTML = '', winnerId = null;
     if (aId && bId) {
       const r = DATA.resultForPair(aId, bId);
       if (r) {
@@ -505,8 +510,14 @@
           const a = r.away != null && r.away !== '' ? r.away : '-';
           score = `${esc(h)}<span class="sc-dash">–</span>${esc(a)}`;
         }
+        // penalty shootout: show pens line, mark the final as 点球, highlight winner
+        if (r.homePen != null && r.awayPen != null) {
+          pensHTML = `<span class="score-pens">${esc(t('pens'))} ${esc(r.homePen)}` +
+            `<span class="sc-dash">–</span>${esc(r.awayPen)}</span>`;
+        }
+        if (done) winnerId = r.winner || null;
         if (live) { cls = 'is-live'; label = t('status_live') + (r.detail ? ' · ' + r.detail : ''); }
-        else if (done) { cls = 'is-final'; label = t('status_final'); }
+        else if (done) { cls = 'is-final'; label = t('status_final') + (pensHTML ? ' · ' + t('pens') : ''); }
       }
     }
 
@@ -521,11 +532,13 @@
     card.appendChild(meta);
 
     const body = el('div', 'match-body');
-    body.appendChild(koSide(m.a, ctx));
+    body.appendChild(koSide(m.a, ctx, winnerId));
     const center = el('div', 'vs' + (hasScore ? ' has-score' : ''));
-    center.innerHTML = hasScore ? `<span class="score">${score}</span>` : `<span>${esc(t('vs'))}</span>`;
+    center.innerHTML = hasScore
+      ? `<span class="score">${score}</span>` + pensHTML
+      : `<span>${esc(t('vs'))}</span>`;
     body.appendChild(center);
-    body.appendChild(koSide(m.b, ctx));
+    body.appendChild(koSide(m.b, ctx, winnerId));
     card.appendChild(body);
     return card;
   }

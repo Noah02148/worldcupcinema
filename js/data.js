@@ -89,11 +89,16 @@
       if (cs.length < 2) return;
       const type = (e.status && e.status.type) || {};
       const scores = {};
-      let winner = null;
+      const shootout = {};
+      let winner = null, hasPens = false;
       cs.forEach((c) => {
         const ab = c.team && c.team.abbreviation;
         if (!ab) return;
         scores[ab.trim()] = c.score;
+        // shootoutScore is present on a penalty-decided knockout match
+        if (c.shootoutScore != null && c.shootoutScore !== '') {
+          shootout[ab.trim()] = c.shootoutScore; hasPens = true;
+        }
         if (c.winner) winner = ab.trim();   // set by ESPN incl. on penalties
       });
       const ab0 = cs[0].team && cs[0].team.abbreviation;
@@ -104,6 +109,7 @@
         completed: !!type.completed,
         detail: type.shortDetail || type.detail || '',
         scores,
+        shootout: hasPens ? shootout : null,
         winner,
       };
     });
@@ -128,6 +134,9 @@
       detail: r.detail,
       home: r.scores[h],
       away: r.scores[a],
+      winner: r.winner,
+      homePen: r.shootout ? r.shootout[h] : null,
+      awayPen: r.shootout ? r.shootout[a] : null,
     };
   }
 
@@ -200,9 +209,12 @@
   function resultForPair(a, b) {
     const r = model.resultsByPair[pairKey(a, b)];
     if (!r) return null;
+    const at = (a || '').trim(), bt = (b || '').trim();
     return {
       state: r.state, completed: r.completed, detail: r.detail, winner: r.winner,
-      home: r.scores[(a || '').trim()], away: r.scores[(b || '').trim()],
+      home: r.scores[at], away: r.scores[bt],
+      homePen: r.shootout ? r.shootout[at] : null,
+      awayPen: r.shootout ? r.shootout[bt] : null,
     };
   }
 
