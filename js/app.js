@@ -562,14 +562,31 @@
       if (!buckets.has(key)) buckets.set(key, { key, instant: m.instant, matches: [] });
       buckets.get(key).matches.push(m);
     });
+    const all = [...buckets.values()].sort((a, b) => a.key.localeCompare(b.key));
+
+    // "Today" + the "今日比赛" jump target, same as the group stage. A knockout
+    // match counts as played once both teams are known and its result is final.
+    const override = new URLSearchParams(location.search).get('today');
+    const todayKey = /^\d{4}-\d{2}-\d{2}$/.test(override || '')
+      ? override : I18N.dateKey(new Date());
+    const koPlayed = (m) => {
+      const a = resolveSlot(m.a, ctx), b = resolveSlot(m.b, ctx);
+      if (!a || !b) return false;
+      const r = DATA.resultForPair(a, b);
+      return !!(r && (r.completed || r.state === 'post'));
+    };
+    const focus = all.find((bk) => bk.key >= todayKey && bk.matches.some((m) => !koPlayed(m)));
+    const focusKey = focus ? focus.key : todayKey;
 
     const container = el('div', 'schedule');
-    [...buckets.values()]
-      .sort((a, b) => a.key.localeCompare(b.key))
+    all
       .forEach((bk) => {
-        const section = el('section', 'day-section');
+        const isToday = bk.key === todayKey;
+        const section = el('section', 'day-section' +
+          (isToday ? ' is-today' : '') + (bk.key === focusKey ? ' is-focus' : ''));
         const headRow = el('div', 'day-head');
-        headRow.appendChild(el('h2', 'section-head', esc(I18N.formatDateFull(bk.instant))));
+        const label = (isToday ? t('today') + ' · ' : '') + I18N.formatDateFull(bk.instant);
+        headRow.appendChild(el('h2', 'section-head', esc(label)));
         section.appendChild(headRow);
         const grid = el('div', 'card-grid');
         bk.matches
@@ -860,9 +877,9 @@
       if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
-    // Today's matches: jump to the pinned "today" section. That block only
-    // exists on the group-stage page in date view, so route there first if
-    // needed, then smooth-scroll to it (or to the top if nothing is on today).
+    // Today's matches: route to the home schedule (group stage, or knockout once
+    // groups are over — both tag an is-focus/is-today section), then smooth-scroll
+    // to that section (or to the top if nothing is on today).
     const today = document.querySelector('.today-nav');
     if (today) today.addEventListener('click', (e) => {
       e.preventDefault();
